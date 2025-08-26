@@ -30,7 +30,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.amoledBlack
+import com.example.consistency.model.HabitType
 import kotlinx.serialization.SerialName
+import kotlin.jvm.internal.Ref.BooleanRef
 
 @Composable
 fun  HomeScreen(
@@ -123,6 +125,19 @@ fun CurrentActiveHabits(
         )
         }
     }
+
+}
+
+@Composable
+fun HabitsListCard(
+    challengeName: String,
+    habitType: HabitType,
+    isDeleted:Boolean,
+    streakDays: Int,
+    paused:Boolean,
+    completePercentage:Int
+){
+
 
 }
 
