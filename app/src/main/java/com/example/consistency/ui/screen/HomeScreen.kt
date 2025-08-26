@@ -8,17 +8,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.amoledBlack
 import kotlinx.serialization.SerialName
@@ -27,9 +36,28 @@ import kotlinx.serialization.SerialName
 fun  HomeScreen(
     modifier: Modifier
 ) {
-//TopBar(modifier = modifier)
-StreakStatus(modifier = modifier)
-
+    Scaffold(
+        topBar = {
+            TopBar(modifier = Modifier)
+        },
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            StreakStatus(
+                modifier = modifier
+            )
+            AddNewHabitButton(
+                modifier,
+                onClick = {}
+            )
+            CurrentActiveHabits(
+                number = 20,
+                modifier = modifier
+            )
+        }
+    }
 }
 
 @Composable
@@ -63,6 +91,40 @@ fun StreakStatus(
 
 }
 
+@Composable
+fun CurrentActiveHabits(
+    number:Int,
+    modifier: Modifier
+){
+    Row(
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically,
+
+        modifier=modifier
+    ) {
+
+        Text(
+            text = "Active Habits",
+            modifier = modifier,
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1,
+        )
+        Card(
+            shape = RoundedCornerShape(9.dp),
+            modifier=modifier
+                .padding(9.dp)
+                .size(25.dp)
+        ) {
+        Text(
+            text = number.toString(),
+            textAlign = TextAlign.Center,
+            modifier = modifier.padding(2.dp)
+
+        )
+        }
+    }
+
+}
 
 @Composable
 fun StreakCards(
@@ -98,6 +160,39 @@ fun StreakCards(
     }
 }
 
+@Composable
+fun AddNewHabitButton(
+modifier: Modifier,
+onClick: ()  -> Unit
+){
+    Button(
+    onClick = {
+        onClick
+    },
+    modifier = modifier.fillMaxWidth(),
+    shape = RoundedCornerShape(20.dp),
+    colors =ButtonDefaults.buttonColors(
+        containerColor = MaterialTheme.colorScheme.primaryContainer
+    ),
+) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = modifier
+                .fillMaxWidth()
+        ) {
+    Icon(
+        imageVector = Icons.Default.Add,
+        contentDescription = "Add New Habit",
+        modifier = modifier
+    )
+            Text(
+                text = "Add New Habit",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+}
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -116,3 +211,16 @@ fun TopBar(modifier: Modifier){
     )
 }
 
+
+
+
+
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+    MaterialTheme {
+        HomeScreen(
+            modifier = Modifier
+        )
+    }
+}

@@ -22,27 +22,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AppTheme  {
-                Scaffold(
-                    topBar = {
-                        TopBar(modifier = Modifier)
-                    },
-                    modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    HomeScreen(
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                HomeScreen(modifier = Modifier)
             }
         }
     }
 }
 
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MaterialTheme {
-        HomeScreen(
-            modifier = Modifier
-        )
-    }
-}
