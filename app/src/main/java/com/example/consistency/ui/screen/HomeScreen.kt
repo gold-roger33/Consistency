@@ -1,28 +1,24 @@
 package com.example.consistency.ui.screen
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Minimize
 import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.sharp.AccessTime
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,6 +35,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,9 +46,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.amoledBlack
 import com.example.consistency.R
-import com.example.consistency.model.HabitType
-import kotlinx.serialization.SerialName
-import kotlin.jvm.internal.Ref.BooleanRef
 
 @Composable
 fun  HomeScreen(
@@ -63,11 +57,12 @@ fun  HomeScreen(
         },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(horizontal = 15.dp)
         ) {
+            item {
             StreakStatus(
                 modifier = modifier
             )
@@ -79,9 +74,7 @@ fun  HomeScreen(
                 number = 20,
                 modifier = modifier
             )
-            LazyColumn(
-                modifier = modifier.fillMaxSize()
-            ) {item {
+
                 HabitsListCard(
                     challengeName = "Solve LeetCode problems",
                     //habitType = HabitType.Numerical,
@@ -100,10 +93,37 @@ fun  HomeScreen(
                     completePercentage = 50,
                     modifier = modifier
                 )
+                
+                HabitsListCard(
+                    challengeName = "Practice guitar",
+                    isDeleted = false,
+                    streakDays = 10,
+                    isPaused = false,
+                    completePercentage =50,
+                    modifier = modifier
+                )
             }
             }
         }
     }
+
+
+
+@Composable
+fun PausedDetails(
+    challengeName: String,
+    //habitType: HabitType,
+    isDeleted:Boolean,
+    streakDays: Int,
+    isPaused:Boolean,
+    completePercentage:Int,
+    modifier: Modifier
+){
+    Text(
+        text = "Paused"
+    )
+
+
 }
 
 @Composable
@@ -127,13 +147,13 @@ fun StreakStatus(
         StreakCards(
             days = "6",
             descriptions = "Done Today",
-            IconsImage = R.drawable.thunder,
+            IconsImage = R.drawable.calendar,
             modifier = modifier
         )
         StreakCards(
             days = "7",
             descriptions = "Total Streak",
-            IconsImage = R.drawable.thunder,
+            IconsImage = R.drawable.redfire,
             modifier = modifier
         )
     }
@@ -214,24 +234,32 @@ fun HabitsListCard(
         }
 
     Row(
-        horizontalArrangement = Arrangement.Start,
+        //horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
+
     ) {
         Icon(
             imageVector = Icons.Sharp.AccessTime,
             contentDescription = "Time"
 
         )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
         Text(
             text = "15/30 minutes"
         )
 
+        Spacer(modifier = Modifier.width(10.dp))
+
         Image(
-            painter = painterResource(R.drawable.thunder),
+            painter = painterResource(R.drawable.yellow_fire),
             contentDescription = "fire",
-            modifier = modifier.size(50.dp)
+            modifier = modifier
+                .size(20.dp)
+                .padding(2.dp)
         )
 
         Text(
@@ -308,7 +336,7 @@ fun StreakCards(
         ) {
             Box (
                 modifier = modifier
-                    .size(30.dp)
+                    .size(25.dp)
             ){
             Image(
                 painter = painterResource(IconsImage),
