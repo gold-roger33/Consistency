@@ -3,7 +3,7 @@ package com.example.consistency.model
 sealed class HabitType{
     data class Hourly(
         val TotalHours: Int,
-        val currentTime: Int,
+        val currentHours: Int,
         ) : HabitType()
 
     data class Numerical(
