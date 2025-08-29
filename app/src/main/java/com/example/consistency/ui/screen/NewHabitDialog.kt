@@ -3,6 +3,7 @@ package com.example.consistency.ui.screen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
@@ -32,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.consistency.model.Type
+import com.example.consistency.model.UnitType
 
 @Composable
 fun NewHabitDialogContent(
@@ -40,15 +44,15 @@ fun NewHabitDialogContent(
     onCreate: (String, Int, String) -> Unit
 ) {
     var description by remember { mutableStateOf("") }
-    var target by remember {    mutableIntStateOf(1) }
-    var unit by remember { mutableStateOf("minutes") }
+    var target by remember {  mutableStateOf<Int?>(null) }
+    var unit by remember { mutableStateOf(UnitType.TIMES) }
     var type by remember { mutableStateOf(Type.COUNT) }
 
-    val suggestedUnits = listOf("minutes", "hours", "sessions")
+    val suggestedUnits = UnitType.entries
 
     Card(
         modifier = modifier
-            .size(400.dp)
+            .wrapContentHeight()
     ) {
         Column(
             horizontalAlignment = Alignment.Start,
@@ -106,8 +110,13 @@ fun NewHabitDialogContent(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = "Target")
                     OutlinedTextField(
-                        value = target.toString(),
-                        onValueChange = { target = it.toIntOrNull() ?: 1 },
+                        value = target?.toString() ?: "",
+                        onValueChange = {input ->
+                            target = input.toIntOrNull() ?: if (input.isEmpty()) null else 1
+                                        },
+                        placeholder = {
+                            Text("1")
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         shape = RoundedCornerShape(10.dp),
@@ -117,8 +126,8 @@ fun NewHabitDialogContent(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = "Unit")
                     OutlinedTextField(
-                        value = unit,
-                        onValueChange = { unit = it },
+                        value = unit.label,
+                        onValueChange = { },
                         modifier = Modifier.fillMaxWidth(),
                         readOnly = true,
                         singleLine = true,
@@ -129,7 +138,7 @@ fun NewHabitDialogContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -137,7 +146,7 @@ fun NewHabitDialogContent(
 
                 suggestedUnits.forEach { item ->
                     Text(
-                        text = item,
+                        text = item.label,
                         modifier = Modifier
                             .clickable { unit = item },
                         color =  Color.Cyan,
@@ -165,7 +174,7 @@ fun NewHabitDialogContent(
                 OutlinedButton(
                     onClick = {
                         if (description.isNotBlank()) {
-                            onCreate(description, target, unit)
+                            onCreate(description, target!!, unit.label)
                         }
                     },
                     modifier = modifier

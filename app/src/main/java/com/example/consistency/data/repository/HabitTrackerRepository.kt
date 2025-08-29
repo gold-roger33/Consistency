@@ -11,10 +11,17 @@ private val taskDao: TaskDao
 
     override suspend fun addTask(data: Habit) =  taskDao.addNewTask(data)
 
-    override suspend fun deleteTask(data: Habit) = taskDao.deleteHabit(data.habitName)
+    override suspend fun getTaskById(id: Int): Habit = taskDao.getTaskById(id)
 
-    override fun getTaskById(id: Int): Habit = taskDao.getTaskById(id)
+    override fun getPausedHabits(): Flow<List<Habit>> = taskDao.getPausedHabits()
+
+    override fun getActiveHabits():  Flow<List<Habit>> = taskDao.getActiveHabits()
 
     override suspend fun updateTask(data: Habit) = taskDao.updateTask(data)
 
+    override suspend fun deleteTask(id: Int) = taskDao.deleteHabit(id)
+
+    override suspend fun pauseTask(id: Int) = taskDao.pauseHabit(id)
+
+    override suspend fun resumeTask(id: Int) = taskDao.resumeHabit(id)
 }

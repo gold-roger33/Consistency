@@ -53,6 +53,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.compose.amoledBlack
 import com.example.consistency.R
 import com.example.consistency.data.entity.Habit
+import com.example.consistency.model.toEntity
 
 @Composable
 fun  HomeScreen(
@@ -60,6 +61,8 @@ fun  HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val habitList by viewModel.allHabits.collectAsState()
+    val activeHabitList by viewModel.activeHabits.collectAsState()
+    val pausedHabitList by viewModel.pausedHabits.collectAsState()
     val showDialog by viewModel.showDialog.collectAsState()
 
     Scaffold(
@@ -87,25 +90,48 @@ fun  HomeScreen(
             )
                 Spacer(modifier = Modifier.size(12.dp))
 
-            CurrentActiveHabits(
-                number = 20,
-            )
+                HabitLabel(
+                    title = "Active Habits",
+                    count =activeHabitList.size,
+                )
             }
-                items(habitList){habit ->
+                items(activeHabitList){habit ->
                     HabitsListCard(
-                        challengeName = habit,
+                        challengeName = habit.toEntity(),
                         //habitType = HabitType.Numerical,
                         isDeleted = false,
                         streakDays = 100,
                         onPaused = {
-                            viewModel.onTaskPaused()
+                            viewModel.onTaskPaused(habit)
                         },
                         onDelete = {
-
+                            viewModel.deleteTask(habit)
                         },
                         completePercentage = 60,
                     )
                 }
+            item {
+                HabitLabel(
+                    title = "Paused",
+                    count = pausedHabitList.size,
+                )
+            }
+            items(pausedHabitList){habit ->
+                HabitsListCard(
+                    challengeName = habit.toEntity(),
+                    //habitType = HabitType.Numerical,
+                    isDeleted = false,
+                    streakDays = 100,
+                    onPaused = {
+                        viewModel.onTaskPaused(habit)
+                    },
+                    onDelete = {
+
+                    },
+                    completePercentage = 60,
+                )
+            }
+
             }
             }
     if (showDialog){
@@ -119,23 +145,6 @@ fun  HomeScreen(
     }
         }
 
-
-@Composable
-fun PausedDetails(
-    challengeName: String,
-    //habitType: HabitType,
-    isDeleted:Boolean,
-    streakDays: Int,
-    isPaused:Boolean,
-    completePercentage:Int,
-    modifier: Modifier
-){
-    Text(
-        text = "Paused"
-    )
-
-
-}
 
 @Composable
 fun StreakStatus(
@@ -170,8 +179,9 @@ fun StreakStatus(
 }
 
 @Composable
-fun CurrentActiveHabits(
-    number:Int,
+fun HabitLabel(
+    title: String,
+    count: Int,
     modifier: Modifier = Modifier
 ){
     Row(
@@ -182,7 +192,7 @@ fun CurrentActiveHabits(
     ) {
 
         Text(
-            text = "Active Habits",
+            text = title,
             modifier = modifier,
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
@@ -193,12 +203,17 @@ fun CurrentActiveHabits(
                 .padding(9.dp)
                 .size(25.dp)
         ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
         Text(
-            text = number.toString(),
+            text = count.toString(),
             textAlign = TextAlign.Center,
             modifier = modifier.padding(2.dp)
 
         )
+        }
         }
     }
 
@@ -220,11 +235,6 @@ fun HabitsListCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-//            .border(
-//                width = 0.dp,
-//                color = Color.Gray,
-//                shape = RoundedCornerShape(8.dp)
-//            ),
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
     ) {

@@ -18,13 +18,24 @@ interface TaskDao{
     suspend fun updateTask(data: Habit)
 
     @Query("SELECT * FROM habit WHERE id = :id")
-    fun getTaskById(id: Int): Habit
+    suspend fun getTaskById(id: Int): Habit
 
     @Query("SELECT * FROM habit")
     fun getAllTask(): Flow<List<Habit>>
 
-    @Query("DELETE FROM habit WHERE habitName =:habitName")
-    suspend fun deleteHabit(habitName:String)
+    @Query("DELETE FROM habit WHERE id = :ID")
+    suspend fun deleteHabit(ID : Int)
 
+    @Query("UPDATE habit SET isPaused = 1 WHERE id =:ID")
+    suspend fun pauseHabit(ID :Int)
+
+    @Query("UPDATE habit SET isPaused = 0 WHERE id =:ID")
+    suspend fun resumeHabit(ID :Int)
+
+    @Query("SELECT * FROM habit WHERE isPaused = 1")
+    fun getPausedHabits(): Flow<List<Habit>>
+
+    @Query("SELECT * FROM habit WHERE isPaused = 0")
+    fun getActiveHabits(): Flow<List<Habit>>
 
 }
