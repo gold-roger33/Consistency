@@ -3,6 +3,7 @@ package com.example.consistency.data.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.example.consistency.data.entity.Habit
 import kotlinx.coroutines.flow.Flow
 
@@ -12,6 +13,12 @@ interface TaskDao{
 
     @Insert
     suspend fun addNewTask(data : Habit)
+
+    @Update
+    suspend fun updateTask(data: Habit)
+
+    @Query("SELECT * FROM habit WHERE id = :id")
+    fun getTaskById(id: Int): Habit
 
     @Query("SELECT * FROM habit")
     fun getAllTask(): Flow<List<Habit>>

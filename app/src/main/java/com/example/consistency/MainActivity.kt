@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AppTheme  {
-                HomeScreen(modifier = Modifier)
+                HomeScreen(modifier = Modifier.fillMaxSize())
             }
         }
     }

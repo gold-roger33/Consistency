@@ -10,7 +10,11 @@ data class Habit(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val habitName: String,
-    val number:Int,
+
+    val numberDone: Int = 0,  //no of task completed today by the user
+    val totalTarget:Int, // total no for the current task
+    val isPaused: Boolean = false, //task pause or not
+
     val totalStreakDays : Int,
 
 )

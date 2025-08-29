@@ -1,7 +1,9 @@
 package com.example.consistency.ui.screen
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -23,6 +26,7 @@ import androidx.compose.material.icons.sharp.AccessTime
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,24 +37,30 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.compose.amoledBlack
 import com.example.consistency.R
+import com.example.consistency.data.entity.Habit
 
 @Composable
 fun  HomeScreen(
+    viewModel: HomeScreenViewModel = viewModel(factory = HomeScreenViewModel.factory),
     modifier: Modifier
 ) {
+    val habitList by viewModel.allHabits.collectAsState()
+
     Scaffold(
         topBar = {
             TopBar(modifier = Modifier)
@@ -63,49 +73,37 @@ fun  HomeScreen(
                 .padding(horizontal = 15.dp)
         ) {
             item {
+
             StreakStatus(
                 modifier = modifier
             )
             AddNewHabitButton(
                 modifier,
-                onClick = {}
+                onClick = {
+                    viewModel.addNewTask()
+                }
             )
             CurrentActiveHabits(
                 number = 20,
                 modifier = modifier
             )
-
-                HabitsListCard(
-                    challengeName = "Solve LeetCode problems",
-                    //habitType = HabitType.Numerical,
-                    isDeleted = false,
-                    streakDays = 100,
-                    isPaused = false,
-                    completePercentage = 60,
-                    modifier = modifier
-                )
-
-                HabitsListCard(
-                    challengeName = "Read technical articles",
-                    isDeleted = false,
-                    streakDays = 3,
-                    isPaused = false,
-                    completePercentage = 50,
-                    modifier = modifier
-                )
-                
-                HabitsListCard(
-                    challengeName = "Practice guitar",
-                    isDeleted = false,
-                    streakDays = 10,
-                    isPaused = false,
-                    completePercentage =50,
-                    modifier = modifier
-                )
+            }
+                items(habitList){habit ->
+                    HabitsListCard(
+                        challengeName = habit,
+                        //habitType = HabitType.Numerical,
+                        isDeleted = false,
+                        streakDays = 100,
+                        onPauseed = {
+                            viewModel.onTaskPaused()
+                        },
+                        completePercentage = 60,
+                        modifier = modifier
+                    )
+                }
             }
             }
         }
-    }
 
 
 
@@ -195,229 +193,251 @@ fun CurrentActiveHabits(
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitsListCard(
-    challengeName: String,
+    challengeName: Habit,
     //habitType: HabitType,
     isDeleted:Boolean,
     streakDays: Int,
-    isPaused:Boolean,
+    onPauseed:() -> Unit,
     completePercentage:Int,
     modifier: Modifier
-){
-        Row (
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier
-                .fillMaxWidth()
-        ){
-            Text(
-                text = challengeName
-            )
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 8.dp)
+            .border(
+                width = 1.dp,
+                color = Color.Gray,
+                shape = RoundedCornerShape(8.dp)
+            ),
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(2.dp) // Inner padding
+        ) {
 
-            IconButton(
-                onClick = {}
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = modifier
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = challengeName.habitName
+                )
+
+                IconButton(
+                    onClick = {}
+                ) {
+                    Icon(
+                        Icons.Default.Pause,
+                        contentDescription = "Pause"
+                    )
+                }
+
+                IconButton(
+                    onClick = {}
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete"
+                    )
+                }
+            }
+
+            Row(
+                //horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = modifier
+                    .fillMaxWidth()
+
             ) {
                 Icon(
-                Icons.Default.Pause,
-                    contentDescription = "Pause"
+                    imageVector = Icons.Sharp.AccessTime,
+                    contentDescription = "Time"
+
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = "15/30 minutes"
+                )
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Image(
+                    painter = painterResource(R.drawable.yellow_fire),
+                    contentDescription = "fire",
+                    modifier = modifier
+                        .size(20.dp)
+                        .padding(2.dp)
+                )
+
+                Text(
+                    text = "$streakDays day streak"
+                )
+            }
+            var sliderPosition by remember { mutableFloatStateOf(0f) }
+
+            Column(
+                //horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Slider(
+                    value = sliderPosition,
+                    onValueChange = { sliderPosition = it },
+                    thumb = {}
+                )
+                Text(
+                    text = "$sliderPosition % Completed",
+                    textAlign = TextAlign.Center
                 )
             }
 
-            IconButton(
-                onClick = {}
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Delete")
-            }
-        }
-
-    Row(
-        //horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-
-    ) {
-        Icon(
-            imageVector = Icons.Sharp.AccessTime,
-            contentDescription = "Time"
-
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Text(
-            text = "15/30 minutes"
-        )
-
-        Spacer(modifier = Modifier.width(10.dp))
-
-        Image(
-            painter = painterResource(R.drawable.yellow_fire),
-            contentDescription = "fire",
-            modifier = modifier
-                .size(20.dp)
-                .padding(2.dp)
-        )
-
-        Text(
-            text = "$streakDays day streak"
-        )
-    }
-    var sliderPosition by remember { mutableFloatStateOf(0f) }
-
-    Column (
-        //horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ){
-        Slider(
-            value = sliderPosition,
-            onValueChange = { sliderPosition = it }
-        )
-        Text(
-            text = "$sliderPosition % Completed",
-            textAlign = TextAlign.Center
-        )
-    }
-
-    Row (
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(20.dp)
-    ){
-
-        IconButton(
-            onClick = {}
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Remove,
-                contentDescription = "Minus Sign"
-            )
-        }
-
-        Text(
-            text = streakDays.toString()
-        )
-
-        IconButton(
-            onClick = {}
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = "ADD Button",
-            )}
-    }
-
-}
-
-@Composable
-fun StreakCards(
-    @DrawableRes IconsImage: Int,
-    days:String,
-    descriptions:String,
-    modifier: Modifier
-){
-
-    Card (
-        shape = RoundedCornerShape(15.dp),
-        modifier = modifier
-            .size(width = 100.dp, height = 150.dp)
-
-    ){
-        Column(
-            verticalArrangement = Arrangement.SpaceEvenly,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier.fillMaxSize()
-
-        ) {
-            Box (
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
                 modifier = modifier
-                    .size(25.dp)
-            ){
-            Image(
-                painter = painterResource(IconsImage),
-                contentDescription = "Card Icons"
-            )
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+            ) {
+
+                IconButton(
+                    onClick = {}
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Remove,
+                        contentDescription = "Minus Sign"
+                    )
+                }
+
+                Text(
+                    text = streakDays.toString()
+                )
+
+                IconButton(
+                    onClick = {}
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "ADD Button",
+                    )
+                }
             }
+        }
+    }
+}
 
-            Text(
-                text = descriptions
-            )
+        @Composable
+        fun StreakCards(
+            @DrawableRes IconsImage: Int,
+            days:String,
+            descriptions:String,
+            modifier: Modifier
+        ){
 
-            Text(
-                text = days
-            )
+            Card (
+                shape = RoundedCornerShape(15.dp),
+                modifier = modifier
+                    .size(width = 100.dp, height = 150.dp)
 
+            ){
+                Column(
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = modifier.fillMaxSize()
+
+                ) {
+                    Box (
+                        modifier = modifier
+                            .size(25.dp)
+                    ){
+                        Image(
+                            painter = painterResource(IconsImage),
+                            contentDescription = "Card Icons"
+                        )
+                    }
+
+                    Text(
+                        text = descriptions
+                    )
+
+                    Text(
+                        text = days
+                    )
+
+                }
+
+            }
         }
 
-    }
-}
 
-@Composable
-fun AddNewHabitButton(
-modifier: Modifier,
-onClick: ()  -> Unit
-){
-    Button(
-    onClick = {
-        onClick
-    },
-    modifier = modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(20.dp),
-    colors =ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.primaryContainer
-    ),
-) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = modifier
-                .fillMaxWidth()
-        ) {
-    Icon(
-        imageVector = Icons.Default.Add,
-        contentDescription = "Add New Habit",
-        modifier = modifier
-    )
-            Text(
-                text = "Add New Habit",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
+        @Composable
+        fun AddNewHabitButton(
+            modifier: Modifier,
+            onClick: ()  -> Unit
+        ){
+            Button(
+                onClick = {
+                    onClick
+                },
+                modifier = modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors =ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = modifier
+                        .fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add New Habit",
+                        modifier = modifier
+                    )
+                    Text(
+                        text = "Add New Habit",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+        }
+
+        @OptIn(ExperimentalMaterial3Api::class)
+        @Composable
+        fun TopBar(modifier: Modifier){
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Consistency",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                modifier = modifier.fillMaxWidth(),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = amoledBlack
+                ),
             )
-}
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TopBar(modifier: Modifier){
-    CenterAlignedTopAppBar(
-        title = {
-            Text(
-                "Consistency",
-               style = MaterialTheme.typography.titleLarge
-            )
-        },
-        modifier = modifier.fillMaxWidth(),
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = amoledBlack
-        ),
-    )
-}
+        }
 
 
 
 
 
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    MaterialTheme {
-        HomeScreen(
-            modifier = Modifier
-        )
-    }
-}
+        @Preview(showBackground = true)
+        @Composable
+        fun HomeScreenPreview() {
+            MaterialTheme {
+                HomeScreen(
+                    modifier = Modifier
+                )
+            }
+        }

@@ -13,4 +13,8 @@ private val taskDao: TaskDao
 
     override suspend fun deleteTask(data: Habit) = taskDao.deleteHabit(data.habitName)
 
+    override fun getTaskById(id: Int): Habit = taskDao.getTaskById(id)
+
+    override suspend fun updateTask(data: Habit) = taskDao.updateTask(data)
+
 }
