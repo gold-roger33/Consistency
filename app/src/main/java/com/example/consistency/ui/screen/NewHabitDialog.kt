@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.consistency.model.Type
 
 @Composable
 fun NewHabitDialogContent(
@@ -41,6 +42,7 @@ fun NewHabitDialogContent(
     var description by remember { mutableStateOf("") }
     var target by remember {    mutableIntStateOf(1) }
     var unit by remember { mutableStateOf("minutes") }
+    var type by remember { mutableStateOf(Type.COUNT) }
 
     val suggestedUnits = listOf("minutes", "hours", "sessions")
 
@@ -69,6 +71,33 @@ fun NewHabitDialogContent(
             )
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            Column {
+                Text(text = "Type")
+
+                Column (
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+
+                ) {
+                    Type.entries.forEach { currentType ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clickable { type = currentType }
+                        ) {
+                            RadioButton(
+                                selected = (type == currentType),
+                                onClick = { type = currentType }
+                            )
+                            Text(
+                                text = currentType.description,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
