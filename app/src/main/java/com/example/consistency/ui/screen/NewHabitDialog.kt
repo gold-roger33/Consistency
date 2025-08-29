@@ -34,7 +34,9 @@ import androidx.compose.ui.window.Dialog
 
 @Composable
 fun NewHabitDialogContent(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCancel: () -> Unit,
+    onCreate: (String, Int, String) -> Unit
 ) {
     var description by remember { mutableStateOf("") }
     var target by remember {    mutableIntStateOf(1) }
@@ -76,7 +78,7 @@ fun NewHabitDialogContent(
                     Text(text = "Target")
                     OutlinedTextField(
                         value = target.toString(),
-                        onValueChange = { target = it.toIntOrNull() ?: 0 },
+                        onValueChange = { target = it.toIntOrNull() ?: 1 },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         shape = RoundedCornerShape(10.dp),
@@ -121,7 +123,7 @@ fun NewHabitDialogContent(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = {  },
+                    onClick = onCancel,
                     modifier = modifier
                         .fillMaxWidth(0.5f),
                     shape = RoundedCornerShape(5.dp),
@@ -132,7 +134,11 @@ fun NewHabitDialogContent(
                     )
                 }
                 OutlinedButton(
-                    onClick = {  },
+                    onClick = {
+                        if (description.isNotBlank()) {
+                            onCreate(description, target, unit)
+                        }
+                    },
                     modifier = modifier
                         .fillMaxWidth(1f),
                     shape = RoundedCornerShape(5.dp),
@@ -148,9 +154,19 @@ fun NewHabitDialogContent(
 }
 
 @Composable
-fun NewHabitDialog(modifier: Modifier = Modifier) {
-    Dialog(onDismissRequest = { }) {
-        NewHabitDialogContent(modifier)
+fun NewHabitDialog(
+    modifier: Modifier = Modifier,
+    onDismiss : () -> Unit,
+    onCreate: (String, Int, String) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        NewHabitDialogContent(
+            modifier,
+            onCancel = onDismiss,
+            onCreate = { name, target, unit ->
+                onCreate(name, target, unit)
+            }
+        )
     }
 }
 
@@ -159,7 +175,11 @@ fun NewHabitDialog(modifier: Modifier = Modifier) {
 fun NewHabitDialogContentPreview() {
     MaterialTheme {
         NewHabitDialogContent(
-            modifier = Modifier
+            modifier = Modifier,
+            onCancel = {},
+            onCreate = {name,target,unit ->
+
+            } ,
         )
     }
 }

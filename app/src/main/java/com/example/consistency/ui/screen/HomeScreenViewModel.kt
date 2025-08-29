@@ -1,5 +1,6 @@
 package com.example.consistency.ui.screen
 
+import android.util.MutableBoolean
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
@@ -20,6 +21,8 @@ class HomeScreenViewModel(
     private val _allHabitsList = MutableStateFlow<List<Habit>>(emptyList())
     val allHabits :StateFlow<List<Habit>> = _allHabitsList
 
+    private val _showDialog : MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val showDialog : StateFlow<Boolean> = _showDialog
 
     init {
         viewModelScope.launch {
@@ -27,6 +30,10 @@ class HomeScreenViewModel(
                 _allHabitsList.value = habits
             }
         }
+    }
+
+    fun showDialog(value : Boolean){
+        _showDialog.value = value
     }
 
     fun incProgress(habit: Habit) {
@@ -38,8 +45,15 @@ class HomeScreenViewModel(
         }
     }
 
-    fun addNewTask(){
-
+    fun addNewTask(habitName: String, totalTarget: Int, unit: String){
+        val newHabit = Habit(
+            habitName = habitName,
+            totalTarget = totalTarget,
+            totalStreakDays = 0
+        )
+        viewModelScope.launch {
+            habitsRepository.addTask(newHabit)
+        }
     }
 
     fun onTaskPaused(){

@@ -57,15 +57,16 @@ import com.example.consistency.data.entity.Habit
 @Composable
 fun  HomeScreen(
     viewModel: HomeScreenViewModel = viewModel(factory = HomeScreenViewModel.factory),
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     val habitList by viewModel.allHabits.collectAsState()
+    val showDialog by viewModel.showDialog.collectAsState()
 
     Scaffold(
         topBar = {
-            TopBar(modifier = Modifier)
+            TopBar()
         },
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -77,15 +78,17 @@ fun  HomeScreen(
             StreakStatus(
                 modifier = modifier
             )
+                Spacer(modifier = Modifier.size(12.dp))
+
             AddNewHabitButton(
-                modifier,
                 onClick = {
-                    viewModel.addNewTask()
+                    viewModel.showDialog(true)
                 }
             )
+                Spacer(modifier = Modifier.size(12.dp))
+
             CurrentActiveHabits(
                 number = 20,
-                modifier = modifier
             )
             }
                 items(habitList){habit ->
@@ -94,17 +97,27 @@ fun  HomeScreen(
                         //habitType = HabitType.Numerical,
                         isDeleted = false,
                         streakDays = 100,
-                        onPauseed = {
+                        onPaused = {
                             viewModel.onTaskPaused()
                         },
+                        onDelete = {
+
+                        },
                         completePercentage = 60,
-                        modifier = modifier
                     )
                 }
             }
             }
+    if (showDialog){
+        NewHabitDialog(
+            onDismiss = { viewModel.showDialog(false) },
+            onCreate = { name, target, unit ->
+                viewModel.addNewTask(name, target, unit)
+                viewModel.showDialog(false)
+            }
+        )
+    }
         }
-
 
 
 @Composable
@@ -126,7 +139,7 @@ fun PausedDetails(
 
 @Composable
 fun StreakStatus(
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ){
     Row (
         verticalAlignment = Alignment.Top,
@@ -140,19 +153,17 @@ fun StreakStatus(
             days = "5",
             descriptions = "Active",
             IconsImage = R.drawable.thunder,
-            modifier = modifier
         )
         StreakCards(
             days = "6",
             descriptions = "Done Today",
             IconsImage = R.drawable.calendar,
-            modifier = modifier
+
         )
         StreakCards(
             days = "7",
             descriptions = "Total Streak",
             IconsImage = R.drawable.redfire,
-            modifier = modifier
         )
     }
 
@@ -161,13 +172,13 @@ fun StreakStatus(
 @Composable
 fun CurrentActiveHabits(
     number:Int,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ){
     Row(
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
 
-        modifier=modifier
+        modifier = modifier.fillMaxWidth()
     ) {
 
         Text(
@@ -200,24 +211,25 @@ fun HabitsListCard(
     //habitType: HabitType,
     isDeleted:Boolean,
     streakDays: Int,
-    onPauseed:() -> Unit,
+    onPaused:() -> Unit,
+    onDelete: () -> Unit,
     completePercentage:Int,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 8.dp)
-            .border(
-                width = 1.dp,
-                color = Color.Gray,
-                shape = RoundedCornerShape(8.dp)
-            ),
+            .padding(vertical = 8.dp),
+//            .border(
+//                width = 0.dp,
+//                color = Color.Gray,
+//                shape = RoundedCornerShape(8.dp)
+//            ),
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
     ) {
         Column(
-            modifier = Modifier.padding(2.dp) // Inner padding
+            modifier = Modifier.padding(8.dp)
         ) {
 
             Row(
@@ -227,11 +239,13 @@ fun HabitsListCard(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = challengeName.habitName
+                    text = challengeName.habitName,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
                 )
 
                 IconButton(
-                    onClick = {}
+                    onClick = onPaused
                 ) {
                     Icon(
                         Icons.Default.Pause,
@@ -240,7 +254,7 @@ fun HabitsListCard(
                 }
 
                 IconButton(
-                    onClick = {}
+                    onClick = onDelete
                 ) {
                     Icon(
                         Icons.Default.Delete,
@@ -248,10 +262,10 @@ fun HabitsListCard(
                     )
                 }
             }
+            Spacer(modifier = Modifier.size(8.dp))
 
             Row(
-                //horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                 verticalAlignment = Alignment.CenterVertically,
                 modifier = modifier
                     .fillMaxWidth()
 
@@ -278,15 +292,19 @@ fun HabitsListCard(
                         .padding(2.dp)
                 )
 
+                Spacer(modifier = Modifier.width(6.dp))
+
                 Text(
-                    text = "$streakDays day streak"
+                    text = "$streakDays day streak",
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
-            var sliderPosition by remember { mutableFloatStateOf(0f) }
+            var sliderPosition by remember { mutableFloatStateOf(completePercentage / 100f ) }
 
             Column(
                 //horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 Slider(
                     value = sliderPosition,
@@ -294,8 +312,10 @@ fun HabitsListCard(
                     thumb = {}
                 )
                 Text(
-                    text = "$sliderPosition % Completed",
-                    textAlign = TextAlign.Center
+                    text = "${(sliderPosition * 100).toInt()}% Completed",
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
 
@@ -304,7 +324,7 @@ fun HabitsListCard(
                 horizontalArrangement = Arrangement.Center,
                 modifier = modifier
                     .fillMaxWidth()
-                    .padding(top = 10.dp)
+                    //.padding(top = 10.dp)
             ) {
 
                 IconButton(
@@ -317,7 +337,10 @@ fun HabitsListCard(
                 }
 
                 Text(
-                    text = streakDays.toString()
+                    text = streakDays.toString(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+
                 )
 
                 IconButton(
@@ -338,7 +361,7 @@ fun HabitsListCard(
             @DrawableRes IconsImage: Int,
             days:String,
             descriptions:String,
-            modifier: Modifier
+            modifier: Modifier = Modifier
         ){
 
             Card (
@@ -379,13 +402,11 @@ fun HabitsListCard(
 
         @Composable
         fun AddNewHabitButton(
-            modifier: Modifier,
-            onClick: ()  -> Unit
+            onClick: ()  -> Unit,
+            modifier: Modifier = Modifier
         ){
             Button(
-                onClick = {
-                    onClick
-                },
+                onClick = onClick,
                 modifier = modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors =ButtonDefaults.buttonColors(
@@ -394,14 +415,15 @@ fun HabitsListCard(
             ) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = modifier
                         .fillMaxWidth()
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Add New Habit",
-                        modifier = modifier
-                    )
+                       )
+
                     Text(
                         text = "Add New Habit",
                         style = MaterialTheme.typography.labelLarge,
@@ -413,7 +435,7 @@ fun HabitsListCard(
 
         @OptIn(ExperimentalMaterial3Api::class)
         @Composable
-        fun TopBar(modifier: Modifier){
+        fun TopBar(modifier: Modifier = Modifier){
             CenterAlignedTopAppBar(
                 title = {
                     Text(

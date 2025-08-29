@@ -1,6 +1,7 @@
 package com.example.consistency
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,9 +17,12 @@ import com.example.compose.AppTheme
 import com.example.consistency.ui.screen.HomeScreen
 import com.example.consistency.ui.screen.TopBar
 
+private const val TAG = "MainActivity"
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.wtf(TAG, "TEST WTF LOG")
         enableEdgeToEdge()
         setContent {
             AppTheme  {
