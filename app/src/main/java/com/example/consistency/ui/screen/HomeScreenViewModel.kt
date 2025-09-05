@@ -1,5 +1,6 @@
 package com.example.consistency.ui.screen
 
+import android.util.Log
 import android.util.MutableBoolean
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
@@ -18,7 +19,10 @@ import com.example.consistency.model.toUiModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.launch
+
+private const val VIEWTAG = "viewmodel"
 
 class HomeScreenViewModel(
     private val habitsRepository: HabitsRepository
@@ -33,9 +37,14 @@ class HomeScreenViewModel(
     private val _activeHabitsList = MutableStateFlow<List<HabitUiModel>>(emptyList())
     val activeHabits : StateFlow<List<HabitUiModel>> = _activeHabitsList
 
+    private val _completedHabitsList = MutableStateFlow<List<HabitUiModel>>(emptyList())
+    val completedHabits : StateFlow<List<HabitUiModel>> = _completedHabitsList
+
     private val _showDialog : MutableStateFlow<Boolean> = MutableStateFlow(false)
     val showDialog : StateFlow<Boolean> = _showDialog
 
+    private val _sliderPositions = MutableStateFlow<Map<Int, Float>>(emptyMap())
+    val sliderPositions: StateFlow<Map<Int, Float>> = _sliderPositions
 
     init {
         viewModelScope.launch {
@@ -45,17 +54,43 @@ class HomeScreenViewModel(
                 _allHabitsList.value = allHabits
                 _activeHabitsList.value = allHabits.filter { !it.isPaused }
                 _pausedHabitsList.value = allHabits.filter { it.isPaused }
+                _completedHabitsList.value = allHabits.filter { it.isCompleted }
+
             }
         }
+        Log.d(VIEWTAG,"viewModel init")
+    }
+
+    fun updateSlider(habitId: Int, position: Float){
+        _sliderPositions.value = _sliderPositions.value.toMutableMap().apply {
+            this[habitId] = position
+        }
+    }
+
+    fun getSliderPosition(habitId: Int): Float {
+        return _sliderPositions.value[habitId] ?: 0f
     }
 
     fun showDialog(value : Boolean){
         _showDialog.value = value
     }
 
+    fun isActivityPaused(value : Boolean){
+
+    }
+
     fun incProgress(habitUi: HabitUiModel) {
         if (habitUi.done < habitUi.target) {
             val updated = habitUi.copy(done = habitUi.done + 1)
+            viewModelScope.launch {
+                habitsRepository.updateTask(updated.toEntity())
+            }
+        }
+    }
+
+    fun decProgress(habitUi: HabitUiModel){
+        if (habitUi.done > 0) {
+            val updated = habitUi.copy(done = habitUi.done -1)
             viewModelScope.launch {
                 habitsRepository.updateTask(updated.toEntity())
             }
@@ -70,6 +105,7 @@ class HomeScreenViewModel(
         viewModelScope.launch {
             habitsRepository.addTask(newHabit.toEntity())
         }
+        Log.d(VIEWTAG,"addNewTaskCompleted")
     }
 
     fun deleteTask(habit : HabitUiModel){
@@ -91,17 +127,25 @@ class HomeScreenViewModel(
 
     }
 
-    fun onTaskCompleted(){
+    fun numberOfHabitsCompleted(): Int {
+        return completedHabits.value.size
+    }
+
+    fun onTaskCompleted(habit: HabitUiModel){
 
     }
 
-    fun calcuateActiveTask(){
-
+    //Number of  ActiveHabits for StreakCards Compose
+    fun calculateActiveTask() :Int{
+        return activeHabits.value.size
     }
 
     fun taskDoneToday(){
 
     }
+
+
+
     fun totalStreak(){
 
     }
