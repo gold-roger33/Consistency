@@ -2,6 +2,7 @@ package com.example.consistency.ui.screen
 
 import android.graphics.RuntimeShader
 import android.os.Build
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.collection.floatListOf
@@ -87,8 +88,8 @@ fun  HomeScreen(
         onDelete = { viewModel.deleteTask(it) },
         onAddHabitClick = { viewModel.showDialog(true) },
         onDialogDismiss = { viewModel.showDialog(false) },
-        onDialogCreate = { name, target, unit ->
-            viewModel.addNewTask(name, target, unit)
+        onDialogCreate = { name, target, unit , isTimeBased->
+            viewModel.addNewTask(name, target, unit, isTimeBased)
             viewModel.showDialog(false)
         },
         onDecrement= { viewModel.incProgress(it)},
@@ -190,7 +191,7 @@ fun HabitsListCard(
     streakDays: Int,
     onPausedOrResume:() -> Unit,
     onDelete: () -> Unit,
-    completePercentage:Int,
+    completePercentage:Float,
     showProgressControls: Boolean = true,
     onDecrement: () -> Unit,
     onIncrement:() -> Unit,
@@ -198,6 +199,11 @@ fun HabitsListCard(
     onSliderChange: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Log.d("SliderDebug",
+        "Habit: ${challengeName.habitName}, " +
+        "numberDone=${challengeName.numberDone}, " +
+        "totalTarget=${challengeName.totalTarget}")
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -474,60 +480,6 @@ fun HabitsListCard(
         }
 
 
-@Language("AGSL")
-val CUSTOM_SHADER = """
-    uniform float2 resolution;
-    layout(color) uniform half4 color;   // Neon green
-    layout(color) uniform half4 color2;  // Black
-
-    half4 main(in float2 fragCoord) {
-        float2 uv = fragCoord / resolution.xy;
-
-        // Create a smooth gradient transition from green (left) to black (after 1/3)
-        float mixValue = smoothstep(0.0, 0.33, uv.x);
-
-        return mix(color, color2, mixValue);
-    }
-""".trimIndent()
-
-val NeonGreen = Color(0xFF00FF88)
-val Black = Color(0xFF000000)
-
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-@Composable
-//@Preview
-fun ShaderBrushExample() {
-    Box(
-        modifier = Modifier
-            .drawWithCache {
-                val shader = RuntimeShader(CUSTOM_SHADER)
-                val shaderBrush = ShaderBrush(shader)
-                shader.setFloatUniform("resolution", size.width, size.height)
-                onDrawBehind {
-//                    shader.setColorUniform(
-//                        "color",
-//                        android.graphics.Color.valueOf(
-//                            NeonGreen.red, NeonGreen.green,
-//                            NeonGreen.blue, NeonGreen.alpha
-//                        )
-//                    )
-                    shader.setColorUniform(
-                        "color2",
-                        android.graphics.Color.valueOf(
-                            Black.blue, Black.alpha,
-                            NeonGreen.alpha, NeonGreen.blue,
-                            //Black.red, Black.green,
-
-                        )
-                    )
-                    drawRect(shaderBrush)
-                }
-            }
-            .fillMaxWidth()
-            .height(200.dp)
-    )
-}
-
 
 
 @Preview(showBackground = true)
@@ -536,8 +488,8 @@ fun HabitsListCardPreview() {
     val fakeHabit = Habit(
        id = 1,
         habitName = "Read Books",
-       totalTarget = 30,
-       numberDone = 15,
+       totalTarget = 30F,
+       numberDone = 15F,
         isPaused = false,
         totalStreakDays = 5,
     )

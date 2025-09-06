@@ -97,10 +97,11 @@ class HomeScreenViewModel(
         }
     }
 
-    fun addNewTask(habitName: String, totalTarget: Int, unit: String){
+    fun addNewTask(habitName: String, totalTarget: Float, unit: String,isTimeBased:Boolean){
         val newHabit = HabitUiModel(
             name = habitName,
-            target = totalTarget
+            target = totalTarget,
+            isTimeBased = isTimeBased
         )
         viewModelScope.launch {
             habitsRepository.addTask(newHabit.toEntity())

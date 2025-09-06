@@ -15,8 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -43,15 +48,18 @@ import com.example.consistency.model.UnitType
 fun NewHabitDialogContent(
     modifier: Modifier = Modifier,
     onCancel: () -> Unit,
-    onCreate: (String, Int, String) -> Unit
+    onCreate: (String, Float, String,Boolean) -> Unit
 ) {
     var description by remember { mutableStateOf("") }
-    var target by remember {  mutableStateOf<Int?>(null) }
-    var unit by remember { mutableStateOf(UnitType.TIMES) }
+    var target by remember {  mutableStateOf<Float?>(null) }
+    var unit by remember { mutableStateOf(UnitType.TASKS) }
     var type by remember { mutableStateOf(Type.COUNT) }
 
     val suggestedUnits = UnitType.entries
     val context = LocalContext.current
+
+    var selectedHour by remember { mutableStateOf(0) }
+    var selectedMinute by remember { mutableStateOf(0) }
 
     Card(
         modifier = modifier
@@ -94,39 +102,73 @@ fun NewHabitDialogContent(
                                 .clickable { type = currentType }
                         ) {
                             RadioButton(
-                                selected = (type == currentType),
+                                selected = if (unit == UnitType.HOURS
+                                    || unit ==UnitType.MINUTES  ){
+                                    currentType == Type.TIME
+                                }else{
+                                    (type == currentType)
+                                },
                                 onClick = { type = currentType }
                             )
+                            val icon = when (currentType) {
+                                Type.TIME -> Icons.Default.AccessTime
+                                Type.COUNT -> Icons.Default.TrackChanges
+                            }
+
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = currentType.name
+                            )
+
                             Text(
                                 text = currentType.description,
-                                modifier = Modifier.padding(start = 4.dp)
+                                modifier = Modifier
+                                    .padding(start = 2.dp)
                             )
                         }
                     }
                 }
             }
 
-            Row(
+            Row(verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .weight(1f)
+
+                ) {
                     Text(text = "Target")
-                    OutlinedTextField(
-                        value = target?.toString() ?: "",
-                        onValueChange = {input ->
-                            target = input.toIntOrNull() ?: if (input.isEmpty()) null else 1
-                                        },
-                        placeholder = {
-                            Text("1")
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
-                    )
+                    if (unit == UnitType.MINUTES || unit == UnitType.HOURS ){
+                        CustomTimer(
+                            selectedHour = selectedHour,
+                            selectedMinute = selectedMinute,
+                            onHourChange = { selectedHour = it },
+                            onMinuteChange = { selectedMinute = it }
+                        )
+                    }
+                    else {
+                        OutlinedTextField(
+                            value = target?.toString() ?: "",
+                            onValueChange = { input ->
+
+                                target = input.toFloatOrNull() ?: if (input.isEmpty()) null else 1F
+                            },
+                            placeholder = {
+                                Text("1")
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = RoundedCornerShape(10.dp),
+                        )
+                    }
                 }
 
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(1f)) {
                     Text(text = "Unit")
                     OutlinedTextField(
                         value = unit.label,
@@ -176,13 +218,19 @@ fun NewHabitDialogContent(
                 }
                 OutlinedButton(
                     onClick = {
-                        if (description.isBlank() || target == null) {
-                            Toast.makeText(context,
-                                "Enter a vaild Description or Target",
-                                Toast.LENGTH_SHORT).show()
+                        val isTimeBased = unit == UnitType.MINUTES || unit == UnitType.HOURS
+
+                        val finalTarget = if (isTimeBased) {
+                            (selectedHour * 60 + selectedMinute).toFloat()
                         } else {
-                            onCreate(description, target!!, unit.label)
+                            target
                         }
+
+                        if (description.isBlank() || finalTarget == null || finalTarget.isNaN() || finalTarget <= 0f) {
+                        Toast.makeText(context, "Enter a valid Description or Target", Toast.LENGTH_SHORT).show()
+                    } else {
+                        onCreate(description, finalTarget, unit.label, isTimeBased)
+                    }
                     },
                     modifier = modifier
                         .fillMaxWidth(1f),
@@ -202,14 +250,14 @@ fun NewHabitDialogContent(
 fun NewHabitDialog(
     modifier: Modifier = Modifier,
     onDismiss : () -> Unit,
-    onCreate: (String, Int, String) -> Unit
+    onCreate: (String, Float, String,Boolean) -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
         NewHabitDialogContent(
             modifier,
             onCancel = onDismiss,
-            onCreate = { name, target, unit ->
-                onCreate(name, target, unit)
+            onCreate = { name, target, unit, isTimeBased ->
+                onCreate(name, target, unit, isTimeBased)
             }
         )
     }
@@ -222,7 +270,7 @@ fun NewHabitDialogContentPreview() {
         NewHabitDialogContent(
             modifier = Modifier,
             onCancel = {},
-            onCreate = {name,target,unit ->
+            onCreate = {name,target,unit,isTimeBased->
 
             } ,
         )

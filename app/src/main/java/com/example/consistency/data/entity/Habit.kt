@@ -10,9 +10,12 @@ data class Habit(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val habitName: String,
-    val totalTarget:Int, // total no for the current task
+    
+    val totalTarget:Float, //  Could be in minutes or counts
 
-    val numberDone: Int = 0,  //no of task completed today by the user
+    val numberDone: Float = 0F,  //no of task completed today by the user
+
+    val isTimeBased: Boolean = false, // True = time-based, False = count-based
 
     val isPaused: Boolean = false, //task pause or not
 

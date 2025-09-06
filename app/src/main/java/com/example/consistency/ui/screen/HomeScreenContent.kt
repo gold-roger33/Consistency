@@ -1,6 +1,7 @@
 package com.example.consistency.ui.screen
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -33,12 +34,14 @@ fun HomeScreenContent(
     onIncrement: (HabitUiModel) -> Unit,
     onDecrement: (HabitUiModel) -> Unit,
     showProgressControls: (HabitUiModel) -> Boolean,
-    onDialogCreate: (String, Int, String) -> Unit,
+    onDialogCreate: (String, Float, String, Boolean) -> Unit,
     modifier: Modifier = Modifier,
     sliderPosition: Map<Int, Float>,
     onSliderChange: (habitId: Int, newValue: Float) -> Unit,
 
 ) {
+    Log.d("HomeScreenContent", "Active habits count: $activeHabitsNumber")
+
     Scaffold(
         topBar = { TopBar() },
         modifier = modifier.fillMaxSize()
@@ -62,18 +65,20 @@ fun HomeScreenContent(
             }
 
             items(activeHabits) { habit ->
+                val safeSlider = sliderPosition[habit.id]?.takeIf { !it.isNaN() }
+                    ?: (habit.done / habit.target).takeIf { !it.isNaN() } ?: 0f
+
                 HabitsListCard(
                     challengeName = habit.toEntity(),
                     isPaused = false,
                     streakDays = 100,
                     onPausedOrResume = { onPauseResume(habit) },
                     onDelete = { onDelete(habit) },
-                    completePercentage = 60,
+                    completePercentage = 60F,
                     showProgressControls = !habit.isPaused,
                     onIncrement = { onIncrement(habit) },
                     onDecrement = { onDecrement(habit) },
-                    sliderPosition = sliderPosition[habit.id] ?:
-                                    (habit.done.toFloat() / habit.target),
+                    sliderPosition = safeSlider,
                     onSliderChange = { newValue -> onSliderChange(habit.id, newValue) }
                 )
             }
@@ -89,7 +94,7 @@ fun HomeScreenContent(
                     streakDays = 100,
                     onPausedOrResume = { onPauseResume(habit) },
                     onDelete = { onDelete(habit) },
-                    completePercentage = 60,
+                    completePercentage = 60F,
                     showProgressControls = false,
                     onDecrement = {},
                     onIncrement = { },
@@ -117,8 +122,8 @@ fun HomeScreenContent(
 @Composable
 fun HomeScreenContentPreview() {
     val mockHabits = listOf(
-        HabitUiModel(id = 1, name = "Read", target = 30, done = 15, isPaused = false),
-        HabitUiModel(id = 2, name = "Workout", target = 20, done = 5, isPaused = true)
+        HabitUiModel(id = 1, name = "Read", target = 30F, done = 15F, isPaused = false),
+        HabitUiModel(id = 2, name = "Workout", target = 20F, done = 5F, isPaused = true)
     )
     val mockSliderPositions = mapOf(
         1 to 0.5f, // 15/30
@@ -135,7 +140,7 @@ fun HomeScreenContentPreview() {
         onDelete = {},
         onAddHabitClick = {},
         onDialogDismiss = {},
-        onDialogCreate = { _, _, _ -> },
+        onDialogCreate = { _, _, _ ,_-> },
         activeHabitsNumber = 1,
         onDecrement = { },
         showProgressControls = { habit -> !habit.isPaused },

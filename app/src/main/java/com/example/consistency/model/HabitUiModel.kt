@@ -5,12 +5,13 @@ import com.example.consistency.data.entity.Habit
 data class HabitUiModel(
     val id: Int = 0,
     val name: String,
-    val target: Int,
-    val done: Int = 0,
+    val target: Float,
+    val done: Float = 0F,
+    val isTimeBased:Boolean = false,
     val isPaused: Boolean = false,
     val totalStreakDays: Int = 0 ,
     val isCompleted: Boolean = done >= target,
-    val progressPercentage: Float = done.toFloat() / target
+    val progressPercentage: Float = done / target
 )
 
 fun Habit.toUiModel(): HabitUiModel {
@@ -22,7 +23,8 @@ return HabitUiModel(
     isPaused = isPaused,
     totalStreakDays = totalStreakDays,
     isCompleted = numberDone >= totalTarget,
-    progressPercentage = numberDone.toFloat() / totalTarget
+    progressPercentage = numberDone / totalTarget,
+    isTimeBased = isTimeBased
 )
 }
 
@@ -33,6 +35,7 @@ fun HabitUiModel.toEntity() : Habit{
         totalTarget = target,
         numberDone = done,
         isPaused = isPaused,
-        totalStreakDays = totalStreakDays
+        totalStreakDays = totalStreakDays,
+        isTimeBased = isTimeBased
     )
 }
