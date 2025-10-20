@@ -61,6 +61,7 @@ import com.example.compose.amoledBlack
 import com.example.compose.sliderColour
 import com.example.consistency.R
 import com.example.consistency.data.entity.Habit
+import com.example.consistency.model.UnitType
 import org.intellij.lang.annotations.Language
 
 @Composable
@@ -88,12 +89,14 @@ fun  HomeScreen(
         onDelete = { viewModel.deleteTask(it) },
         onAddHabitClick = { viewModel.showDialog(true) },
         onDialogDismiss = { viewModel.showDialog(false) },
-        onDialogCreate = { name, target, unit , isTimeBased->
-            viewModel.addNewTask(name, target, unit, isTimeBased)
+        onDialogCreate = { name, target, unit , isTimeBased,unitTypeData->
+            viewModel.addNewTask(
+                name, target, unit, isTimeBased,unitTypeData
+            )
             viewModel.showDialog(false)
         },
-        onDecrement= { viewModel.incProgress(it)},
-        onIncrement= { viewModel.decProgress(it) },
+        onDecrement= { viewModel.decProgress(it)},
+        onIncrement= { viewModel.incProgress(it) },
         showProgressControls ={ habit -> !habit.isPaused },
         sliderPosition = sliderPositions,
         onSliderChange = {habitId, value ->
@@ -186,13 +189,13 @@ fun HabitLabel(
 @Composable
 fun HabitsListCard(
     challengeName: Habit,
-    //habitType: HabitType,
+    unitTypeData: UnitType,
     isPaused: Boolean,
     streakDays: Int,
     onPausedOrResume:() -> Unit,
     onDelete: () -> Unit,
     completePercentage:Float,
-    showProgressControls: Boolean = true,
+    showProgressControls: Boolean = true, //habit paused or not
     onDecrement: () -> Unit,
     onIncrement:() -> Unit,
     sliderPosition: Float,
@@ -263,7 +266,8 @@ fun HabitsListCard(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "15/30 minutes"
+                    text = "${(challengeName.numberDone).toInt()}/${(challengeName.totalTarget).toInt()}  ${unitTypeData.label}"
+                // need to change for time-based
                 )
 
                 Spacer(modifier = Modifier.width(10.dp))
@@ -342,7 +346,7 @@ fun HabitsListCard(
                     }
 
                     Text(
-                        text = streakDays.toString(),
+                        text = "${(challengeName.numberDone).toInt()}",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(horizontal = 16.dp)
 
@@ -486,12 +490,14 @@ fun HabitsListCard(
 @Composable
 fun HabitsListCardPreview() {
     val fakeHabit = Habit(
-       id = 1,
+        id = 1,
         habitName = "Read Books",
-       totalTarget = 30F,
-       numberDone = 15F,
+        totalTarget = 30F,
+        numberDone = 15F,
         isPaused = false,
         totalStreakDays = 5,
+        isTimeBased = false,
+        unitTypeData = UnitType.REPS,
     )
 
 
@@ -508,5 +514,6 @@ fun HabitsListCardPreview() {
         showProgressControls = true,
         sliderPosition =0.5f,
         onSliderChange = {},
+        unitTypeData = UnitType.REPS
     )
 }

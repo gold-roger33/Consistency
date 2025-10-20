@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.AppTheme
 import com.example.compose.greensih
+import com.example.consistency.model.UnitType
 import com.example.consistency.model.toEntity
 
 @Composable
@@ -34,12 +35,12 @@ fun HomeScreenContent(
     onIncrement: (HabitUiModel) -> Unit,
     onDecrement: (HabitUiModel) -> Unit,
     showProgressControls: (HabitUiModel) -> Boolean,
-    onDialogCreate: (String, Float, String, Boolean) -> Unit,
+    onDialogCreate: (String, Float, String, Boolean, UnitType) -> Unit,
     modifier: Modifier = Modifier,
     sliderPosition: Map<Int, Float>,
     onSliderChange: (habitId: Int, newValue: Float) -> Unit,
 
-) {
+    ) {
     Log.d("HomeScreenContent", "Active habits count: $activeHabitsNumber")
 
     Scaffold(
@@ -79,7 +80,9 @@ fun HomeScreenContent(
                     onIncrement = { onIncrement(habit) },
                     onDecrement = { onDecrement(habit) },
                     sliderPosition = safeSlider,
-                    onSliderChange = { newValue -> onSliderChange(habit.id, newValue) }
+                    onSliderChange = { newValue -> onSliderChange(habit.id, newValue) },
+                    unitTypeData = habit.unitTypeData
+
                 )
             }
 
@@ -101,6 +104,7 @@ fun HomeScreenContent(
                     sliderPosition = sliderPosition[habit.id] ?:
                     (habit.done.toFloat() / habit.target),
                     onSliderChange = { },
+                    unitTypeData = habit.unitTypeData
 
                 )
             }
@@ -122,8 +126,21 @@ fun HomeScreenContent(
 @Composable
 fun HomeScreenContentPreview() {
     val mockHabits = listOf(
-        HabitUiModel(id = 1, name = "Read", target = 30F, done = 15F, isPaused = false),
-        HabitUiModel(id = 2, name = "Workout", target = 20F, done = 5F, isPaused = true)
+        HabitUiModel(
+            id = 1,
+            name = "Read",
+            target = 30F,
+            done = 15F,
+            isPaused = false,
+            unitTypeData = UnitType.REPS,
+        ),
+        HabitUiModel(id = 2,
+            name = "Workout",
+            target = 20F,
+            done = 5F,
+            isPaused = true,
+            unitTypeData = UnitType.MINUTES
+        )
     )
     val mockSliderPositions = mapOf(
         1 to 0.5f, // 15/30
@@ -140,7 +157,7 @@ fun HomeScreenContentPreview() {
         onDelete = {},
         onAddHabitClick = {},
         onDialogDismiss = {},
-        onDialogCreate = { _, _, _ ,_-> },
+        onDialogCreate = { _, _, _, _ ,_-> },
         activeHabitsNumber = 1,
         onDecrement = { },
         showProgressControls = { habit -> !habit.isPaused },

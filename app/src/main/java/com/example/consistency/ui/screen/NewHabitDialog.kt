@@ -49,7 +49,7 @@ import com.example.consistency.model.UnitType
 fun NewHabitDialogContent(
     modifier: Modifier = Modifier,
     onCancel: () -> Unit,
-    onCreate: (String, Float, String,Boolean) -> Unit
+    onCreate: (String, Float, String, Boolean, UnitType) -> Unit
 ) {
     var description by remember { mutableStateOf("") }
     var target by remember {  mutableStateOf<Float?>(null) }
@@ -247,7 +247,7 @@ fun NewHabitDialogContent(
                         if (description.isBlank() || finalTarget == null || finalTarget.isNaN() || finalTarget <= 0f) {
                         Toast.makeText(context, "Enter a valid Description or Target", Toast.LENGTH_SHORT).show()
                     } else {
-                        onCreate(description, finalTarget, unit.label, isTimeBased)
+                        onCreate(description, finalTarget, unit.label, isTimeBased, unit)
                     }
                     },
                     modifier = modifier
@@ -268,14 +268,14 @@ fun NewHabitDialogContent(
 fun NewHabitDialog(
     modifier: Modifier = Modifier,
     onDismiss : () -> Unit,
-    onCreate: (String, Float, String,Boolean) -> Unit
+    onCreate: (String, Float, String, Boolean, UnitType) -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
         NewHabitDialogContent(
             modifier,
             onCancel = onDismiss,
-            onCreate = { name, target, unit, isTimeBased ->
-                onCreate(name, target, unit, isTimeBased)
+            onCreate = { name, target, unit, isTimeBased,unitTypeData ->
+                onCreate(name, target, unit, isTimeBased, unitTypeData)
             }
         )
     }
@@ -288,9 +288,9 @@ fun NewHabitDialogContentPreview() {
         NewHabitDialogContent(
             modifier = Modifier,
             onCancel = {},
-            onCreate = {name,target,unit,isTimeBased->
+            onCreate = { name, target, unit, isTimeBased,unitTypeData->
 
-            } ,
+            }
         )
     }
 }

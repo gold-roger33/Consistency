@@ -1,6 +1,7 @@
 package com.example.consistency.model
 
 import com.example.consistency.data.entity.Habit
+import com.example.consistency.model.UnitType
 
 data class HabitUiModel(
     val id: Int = 0,
@@ -11,7 +12,8 @@ data class HabitUiModel(
     val isPaused: Boolean = false,
     val totalStreakDays: Int = 0 ,
     val isCompleted: Boolean = done >= target,
-    val progressPercentage: Float = done / target
+    val progressPercentage: Float = done / target,
+    val unitTypeData: UnitType
 )
 
 fun Habit.toUiModel(): HabitUiModel {
@@ -24,7 +26,8 @@ return HabitUiModel(
     totalStreakDays = totalStreakDays,
     isCompleted = numberDone >= totalTarget,
     progressPercentage = numberDone / totalTarget,
-    isTimeBased = isTimeBased
+    isTimeBased = isTimeBased,
+    unitTypeData = unitTypeData
 )
 }
 
@@ -36,6 +39,7 @@ fun HabitUiModel.toEntity() : Habit{
         numberDone = done,
         isPaused = isPaused,
         totalStreakDays = totalStreakDays,
-        isTimeBased = isTimeBased
+        isTimeBased = isTimeBased,
+        unitTypeData = unitTypeData
     )
 }

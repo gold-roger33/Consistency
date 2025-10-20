@@ -14,6 +14,7 @@ import com.example.consistency.ConsistencyApplication
 import com.example.consistency.data.entity.Habit
 import com.example.consistency.data.repository.HabitsRepository
 import com.example.consistency.model.HabitUiModel
+import com.example.consistency.model.UnitType
 import com.example.consistency.model.toEntity
 import com.example.consistency.model.toUiModel
 import kotlinx.coroutines.Dispatchers
@@ -100,11 +101,16 @@ class HomeScreenViewModel(
         }
     }
 
-    fun addNewTask(habitName: String, totalTarget: Float, unit: String,isTimeBased:Boolean){
+    fun addNewTask(habitName: String,
+                   totalTarget: Float,
+                   unit: String,
+                   isTimeBased:Boolean,
+                   unitTypeData: UnitType){
         val newHabit = HabitUiModel(
             name = habitName,
             target = totalTarget,
-            isTimeBased = isTimeBased
+            isTimeBased = isTimeBased,
+            unitTypeData = unitTypeData
         )
         viewModelScope.launch {
             habitsRepository.addTask(newHabit.toEntity())
