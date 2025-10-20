@@ -46,6 +46,9 @@ class HomeScreenViewModel(
     private val _sliderPositions = MutableStateFlow<Map<Int, Float>>(emptyMap())
     val sliderPositions: StateFlow<Map<Int, Float>> = _sliderPositions
 
+    private val _isTimerRunning = MutableStateFlow(false)
+    val isTimerRunning : StateFlow<Boolean> = _isTimerRunning
+
     init {
         viewModelScope.launch {
             habitsRepository.getTaskStream().collect() { habits ->
@@ -148,6 +151,13 @@ class HomeScreenViewModel(
 
 
     fun totalStreak(){
+
+    }
+
+    private fun calculateRemaningTimer(
+
+    ) {
+
 
     }
 

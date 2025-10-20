@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,10 +53,25 @@ fun NewHabitDialogContent(
 ) {
     var description by remember { mutableStateOf("") }
     var target by remember {  mutableStateOf<Float?>(null) }
-    var unit by remember { mutableStateOf(UnitType.TASKS) }
     var type by remember { mutableStateOf(Type.COUNT) }
+    var selectedUnit by remember { mutableStateOf<UnitType?>(null) }
 
-    val suggestedUnits = UnitType.entries
+    val suggestedUnits by remember(type) {
+        derivedStateOf {
+            UnitType.getTypeValue(type)
+        }
+    }
+
+    val unit by remember (selectedUnit,suggestedUnits,type){
+        derivedStateOf {
+            if (selectedUnit?.type == type) {
+                selectedUnit ?: suggestedUnits.firstOrNull() ?: UnitType.OTHERS
+            } else {
+                suggestedUnits.firstOrNull() ?: UnitType.OTHERS
+            }
+        }
+    }
+
     val context = LocalContext.current
 
     var selectedHour by remember { mutableStateOf(0) }
@@ -193,7 +209,9 @@ fun NewHabitDialogContent(
                     Text(
                         text = item.label,
                         modifier = Modifier
-                            .clickable { unit = item },
+                            .clickable {
+                                selectedUnit = item
+                                       },
                         color =  Color.Cyan,
                         textDecoration = TextDecoration.Underline,
                         )
