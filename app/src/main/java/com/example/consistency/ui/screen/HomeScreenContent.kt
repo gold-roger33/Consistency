@@ -18,6 +18,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.AppTheme
 import com.example.compose.greensih
+import com.example.consistency.model.TimerInfo
+import com.example.consistency.model.TimerState
 import com.example.consistency.model.UnitType
 import com.example.consistency.model.toEntity
 
@@ -35,12 +37,16 @@ fun HomeScreenContent(
     onIncrement: (HabitUiModel) -> Unit,
     onDecrement: (HabitUiModel) -> Unit,
     showProgressControls: (HabitUiModel) -> Boolean,
-    onDialogCreate: (String, Float, String, Boolean, UnitType) -> Unit,
+    onDialogCreate: (String, Long, String, Boolean, UnitType) -> Unit,
     modifier: Modifier = Modifier,
     sliderPosition: Map<Int, Float>,
     onSliderChange: (habitId: Int, newValue: Float) -> Unit,
-
-    ) {
+    onTimerStart: (HabitUiModel) -> Unit,
+    onTimerPause: (HabitUiModel) -> Unit,
+    onTimerStop: (HabitUiModel) -> Unit,
+    timers: Map<Int, TimerInfo>,
+    )
+{
     Log.d("HomeScreenContent", "Active habits count: $activeHabitsNumber")
 
     Scaffold(
@@ -67,22 +73,27 @@ fun HomeScreenContent(
 
             items(activeHabits) { habit ->
                 val safeSlider = sliderPosition[habit.id]?.takeIf { !it.isNaN() }
-                    ?: (habit.done / habit.target).takeIf { !it.isNaN() } ?: 0f
+                    ?: ((habit.progress.toFloat() / habit.target.toFloat()).takeIf {
+                        !it.isNaN() } ?: 0f)
 
                 HabitsListCard(
                     challengeName = habit.toEntity(),
                     isPaused = false,
                     streakDays = 100,
-                    onPausedOrResume = { onPauseResume(habit) },
+                    onHabitPausedOrResume = { onPauseResume(habit) },
                     onDelete = { onDelete(habit) },
-                    completePercentage = 60F,
+                    completePercentage = 60L,
                     showProgressControls = !habit.isPaused,
                     onIncrement = { onIncrement(habit) },
                     onDecrement = { onDecrement(habit) },
                     sliderPosition = safeSlider,
                     onSliderChange = { newValue -> onSliderChange(habit.id, newValue) },
-                    unitTypeData = habit.unitTypeData
-
+                    unitTypeData = habit.unitTypeData,
+                    isTimeBased = habit.isTimeBased,
+                    onTimerStart = { onTimerStart(habit) },
+                    onTimerPause = { onTimerPause(habit) },
+                    onTimerStop = { onTimerStop(habit) },
+                    timerInfo = timers[habit.id],
                 )
             }
 
@@ -95,16 +106,21 @@ fun HomeScreenContent(
                     challengeName = habit.toEntity(),
                     isPaused = true,
                     streakDays = 100,
-                    onPausedOrResume = { onPauseResume(habit) },
+                    onHabitPausedOrResume = { onPauseResume(habit) },
                     onDelete = { onDelete(habit) },
-                    completePercentage = 60F,
+                    completePercentage = 60L,
                     showProgressControls = false,
                     onDecrement = {},
                     onIncrement = { },
-                    sliderPosition = sliderPosition[habit.id] ?:
-                    (habit.done.toFloat() / habit.target),
+                    sliderPosition = sliderPosition[habit.id]
+                        ?: (habit.progress.toFloat() / habit.target),
                     onSliderChange = { },
-                    unitTypeData = habit.unitTypeData
+                    unitTypeData = habit.unitTypeData,
+                    isTimeBased = habit.isTimeBased,
+                    onTimerStart = { onTimerStart(habit) },
+                    onTimerPause = { onTimerPause(habit) },
+                    onTimerStop = { onTimerStop(habit) },
+                    timerInfo = timers[habit.id],
 
                 )
             }
@@ -129,15 +145,15 @@ fun HomeScreenContentPreview() {
         HabitUiModel(
             id = 1,
             name = "Read",
-            target = 30F,
-            done = 15F,
+            target = 30L,
+            progress = 15L,
             isPaused = false,
             unitTypeData = UnitType.REPS,
         ),
         HabitUiModel(id = 2,
             name = "Workout",
-            target = 20F,
-            done = 5F,
+            target = 20L,
+            progress = 5L,
             isPaused = true,
             unitTypeData = UnitType.MINUTES
         )
@@ -145,6 +161,14 @@ fun HomeScreenContentPreview() {
     val mockSliderPositions = mapOf(
         1 to 0.5f, // 15/30
         2 to 0.25f // 5/20
+    )
+    val mockTimers = mapOf(
+        1 to TimerInfo(remainingTime = 14L * 60_000L + 30_000L,
+            isRunning = true,
+            state = TimerState.RUNNING),
+        2 to TimerInfo(remainingTime = 2L * 60_000L + 30_000L,
+            isRunning = false,
+            state = TimerState.PAUSED)
     )
 
     AppTheme {
@@ -157,13 +181,18 @@ fun HomeScreenContentPreview() {
         onDelete = {},
         onAddHabitClick = {},
         onDialogDismiss = {},
-        onDialogCreate = { _, _, _, _ ,_-> },
+        onDialogCreate = { _, _, _, _, _ -> },
         activeHabitsNumber = 1,
         onDecrement = { },
         showProgressControls = { habit -> !habit.isPaused },
         onIncrement = { },
         sliderPosition = mockSliderPositions,
-        onSliderChange =  { _, _ -> },
+        onSliderChange = { _, _ -> },
+
+        onTimerStart = {  },
+        onTimerPause = {  },
+        onTimerStop = {  },
+        timers = mockTimers,
     )
 }
 }

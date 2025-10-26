@@ -1,11 +1,8 @@
 package com.example.consistency.ui.screen
 
-import android.graphics.RuntimeShader
-import android.os.Build
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.annotation.DrawableRes
-import androidx.annotation.RequiresApi
-import androidx.collection.floatListOf
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,7 +24,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.sharp.AccessTime
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -42,14 +41,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -61,8 +55,9 @@ import com.example.compose.amoledBlack
 import com.example.compose.sliderColour
 import com.example.consistency.R
 import com.example.consistency.data.entity.Habit
+import com.example.consistency.model.TimerInfo
+import com.example.consistency.model.TimerState
 import com.example.consistency.model.UnitType
-import org.intellij.lang.annotations.Language
 
 @Composable
 fun  HomeScreen(
@@ -74,6 +69,8 @@ fun  HomeScreen(
     val pausedHabits by viewModel.pausedHabits.collectAsState()
     val showDialog by viewModel.showDialog.collectAsState()
     val sliderPositions by viewModel.sliderPositions.collectAsState()
+    val timers by viewModel.timers.collectAsState()
+
 
 
 
@@ -83,313 +80,435 @@ fun  HomeScreen(
         activeHabits = activeHabits,
         pausedHabits = pausedHabits,
         showDialog = showDialog,
-        onPauseResume = {
+        onPauseResume = { //for each habit
             if (it.isPaused) viewModel.onTaskResume(it) else viewModel.onTaskPaused(it)
         },
         onDelete = { viewModel.deleteTask(it) },
         onAddHabitClick = { viewModel.showDialog(true) },
         onDialogDismiss = { viewModel.showDialog(false) },
-        onDialogCreate = { name, target, unit , isTimeBased,unitTypeData->
+        onDialogCreate = { name, target, unit, isTimeBased, unitTypeData ->
             viewModel.addNewTask(
-                name, target, unit, isTimeBased,unitTypeData
+                name, target, unit, isTimeBased, unitTypeData
             )
             viewModel.showDialog(false)
         },
-        onDecrement= { viewModel.decProgress(it)},
-        onIncrement= { viewModel.incProgress(it) },
-        showProgressControls ={ habit -> !habit.isPaused },
+        onDecrement = { viewModel.decProgress(it) },
+        onIncrement = { viewModel.incProgress(it) },
+        showProgressControls = { habit -> !habit.isPaused },
         sliderPosition = sliderPositions,
-        onSliderChange = {habitId, value ->
+        onSliderChange = { habitId, value ->
             viewModel.updateSlider(habitId, value)
         },
-        modifier = modifier
+        modifier = modifier,
+        onTimerStart = { habit ->
+            viewModel.startTimer(habit) },
+        onTimerPause = {  habit ->
+            viewModel.pauseTimer(habit) },
+        onTimerStop = {  habit ->
+            viewModel.stopTimer(habit) },
+        timers = timers,
     )
 }
 
 
-@Composable
-fun StreakStatus(
-    activeHabitsNumber : Int,
-    modifier: Modifier = Modifier
-){
-    Row (
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.SpaceAround,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 20.dp, bottom = 20.dp)
-    ) {
-
-        StreakCards(
-            days = activeHabitsNumber,
-            descriptions = "Active",
-            IconsImage = R.drawable.thunder,
-        )
-        StreakCards(
-            days = 6,
-            descriptions = "Done Today",
-            IconsImage = R.drawable.calendar,
-
-        )
-        StreakCards(
-            days = 7,
-            descriptions = "Total Streak",
-            IconsImage = R.drawable.redfire,
-        )
-    }
-
-}
-
-@Composable
-fun HabitLabel(
-    title: String,
-    count: Int,
-    colour: Color,
-    modifier: Modifier = Modifier
-){
-    Row(
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically,
-
-        modifier = modifier.fillMaxWidth()
-    ) {
-
-        Text(
-            text = title,
-            modifier = modifier,
-            style = MaterialTheme.typography.labelLarge,
-            maxLines = 1,
-        )
-        Card(
-            shape = RoundedCornerShape(9.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = colour
-            ),
-            modifier=modifier
-                .padding(9.dp)
-                .size(25.dp)
+        @Composable
+        fun StreakStatus(
+            activeHabitsNumber: Int,
+            modifier: Modifier = Modifier
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-        Text(
-            text = count.toString(),
-            textAlign = TextAlign.Center,
-            modifier = modifier.padding(2.dp)
-
-        )
-        }
-        }
-    }
-
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HabitsListCard(
-    challengeName: Habit,
-    unitTypeData: UnitType,
-    isPaused: Boolean,
-    streakDays: Int,
-    onPausedOrResume:() -> Unit,
-    onDelete: () -> Unit,
-    completePercentage:Float,
-    showProgressControls: Boolean = true, //habit paused or not
-    onDecrement: () -> Unit,
-    onIncrement:() -> Unit,
-    sliderPosition: Float,
-    onSliderChange: (Float) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Log.d("SliderDebug",
-        "Habit: ${challengeName.habitName}, " +
-        "numberDone=${challengeName.numberDone}, " +
-        "totalTarget=${challengeName.totalTarget}")
-
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
-        ) {
-
             Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.SpaceAround,
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp, bottom = 20.dp)
+            ) {
+
+                StreakCards(
+                    days = activeHabitsNumber,
+                    descriptions = "Active",
+                    IconsImage = R.drawable.thunder,
+                )
+                StreakCards(
+                    days = 6,
+                    descriptions = "Done Today",
+                    IconsImage = R.drawable.calendar,
+
+                    )
+                StreakCards(
+                    days = 7,
+                    descriptions = "Total Streak",
+                    IconsImage = R.drawable.redfire,
+                )
+            }
+
+        }
+
+        @Composable
+        fun HabitLabel(
+            title: String,
+            count: Int,
+            colour: Color,
+            modifier: Modifier = Modifier
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = modifier
-                    .fillMaxWidth()
+
+                modifier = modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = challengeName.habitName,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f)
-                )
-
-                IconButton(
-                    onClick = onPausedOrResume
-                ) {
-                    Icon(
-                        imageVector = if (isPaused) Icons.Default.PlayArrow else
-                            Icons.Default.Pause,
-                        contentDescription = "Pause"
-                    )
-                }
-
-                IconButton(
-                    onClick = onDelete
-                ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete"
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.size(8.dp))
-
-            Row(
-                 verticalAlignment = Alignment.CenterVertically,
-                modifier = modifier
-                    .fillMaxWidth()
-
-            ) {
-                Icon(
-                    imageVector = Icons.Sharp.AccessTime,
-                    contentDescription = "Time"
-
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "${(challengeName.numberDone).toInt()}/${(challengeName.totalTarget).toInt()}  ${unitTypeData.label}"
-                // need to change for time-based
+                    text = title,
+                    modifier = modifier,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
                 )
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Image(
-                    painter = painterResource(R.drawable.yellow_fire),
-                    contentDescription = "fire",
+                Card(
+                    shape = RoundedCornerShape(9.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = colour
+                    ),
                     modifier = modifier
-                        .size(20.dp)
-                        .padding(2.dp)
-                )
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                Text(
-                    text = "$streakDays day streak",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-           // var sliderPosition by remember { mutableFloatStateOf(completePercentage / 100f ) }
-
-            Column(
-                //horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(vertical = 8.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(24.dp),
-                    contentAlignment = Alignment.CenterStart
+                        .padding(9.dp)
+                        .size(25.dp)
                 ) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth(fraction = sliderPosition)
-                            .height(15.dp)
-                            .background(sliderColour, shape = RoundedCornerShape(50))
-                    )
-
-                     Slider(
-                        value = sliderPosition,
-                        onValueChange = { onSliderChange(it) },
-                        colors = SliderDefaults.colors(
-                            thumbColor = Color.Transparent,
-                            activeTrackColor = Color.Transparent,
-                            inactiveTrackColor = MaterialTheme.colorScheme.primaryContainer
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                Text(
-                    text = "${(sliderPosition * 100).toInt()}% Completed",
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            if (showProgressControls) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = modifier
-                        .fillMaxWidth()
-                    //.padding(top = 10.dp)
-                ) {
-
-                    IconButton(
-                        onClick = onDecrement
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Remove,
-                            contentDescription = "Minus Sign"
-                        )
-                    }
+                        Text(
+                            text = count.toString(),
+                            textAlign = TextAlign.Center,
+                            modifier = modifier.padding(2.dp)
 
-                    Text(
-                        text = "${(challengeName.numberDone).toInt()}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-
-                    )
-
-                    IconButton(
-                        onClick = onIncrement
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "ADD Button",
                         )
                     }
                 }
             }
-            else{
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = modifier
-                        .fillMaxWidth()
 
+        }
+
+        @SuppressLint("DefaultLocale")
+        @OptIn(ExperimentalMaterial3Api::class)
+        @Composable
+        fun HabitsListCard(
+            challengeName: Habit,
+            unitTypeData: UnitType,
+            isPaused: Boolean,
+            streakDays: Int,
+            onHabitPausedOrResume: () -> Unit,
+            onDelete: () -> Unit,
+            completePercentage: Long,
+            showProgressControls: Boolean = true, //habit paused or not
+            onDecrement: () -> Unit,
+            onIncrement: () -> Unit,
+            sliderPosition: Float,
+            onSliderChange: (Float) -> Unit,
+            isTimeBased: Boolean,
+
+            onTimerStart: () -> Unit,
+            onTimerPause: () -> Unit,
+            onTimerStop: () -> Unit,
+            timerInfo: TimerInfo?,
+            modifier: Modifier = Modifier
+        ) {
+            Log.d(
+                "SliderDebug",
+                "Habit: ${challengeName.habitName}, " +
+                        "numberDone=${challengeName.currentProgress}, " +
+                        "totalTarget=${challengeName.totalTarget}"
+            )
+
+            Card(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                shape = RoundedCornerShape(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(8.dp)
                 ) {
-                    Text(
-                        text = "Task is paused",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = modifier
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = challengeName.habitName,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        IconButton(
+                            onClick = {
+                                onHabitPausedOrResume()
+                                if (isTimeBased && timerInfo?.isRunning == true){
+                                    onTimerPause()
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = if (isPaused) Icons.Default.PlayArrow else
+                                    Icons.Default.Pause, //need to update fot time based
+                                contentDescription = "Pause"
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { onDelete()
+                            if (isTimeBased) onTimerStop()
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete Habit"
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.size(8.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = modifier
+                            .fillMaxWidth()
+
+                    ) {
+                        Icon(
+                            imageVector = Icons.Sharp.AccessTime,
+                            contentDescription = "Time"
+
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = "${(challengeName.currentProgress).toInt()}/${(challengeName.totalTarget).toInt()}  ${unitTypeData.label}"
+                            // need to change for time-based and it is directly calling from habit data class
+                        )
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Image(
+                            painter = painterResource(R.drawable.yellow_fire),
+                            contentDescription = "fire",
+                            modifier = modifier
+                                .size(20.dp)
+                                .padding(2.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        Text(
+                            text = "$streakDays day streak",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    // var sliderPosition by remember { mutableFloatStateOf(completePercentage / 100f ) }
+
+                    Column(
+                        //horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(24.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(fraction = sliderPosition)
+                                    .height(15.dp)
+                                    .background(sliderColour, shape = RoundedCornerShape(50))
+                            )
+
+                            Slider(
+                                value = sliderPosition,
+                                onValueChange = { onSliderChange(it) },
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Color.Transparent,
+                                    activeTrackColor = Color.Transparent,
+                                    inactiveTrackColor = MaterialTheme.colorScheme.primaryContainer
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Text(
+                            text = "${(sliderPosition * 100).toInt()}% Completed",
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    if (showProgressControls) {
+                        if (isTimeBased) {
+                            val remainingTime = timerInfo?.remainingTime ?:  (challengeName.totalTarget * 60_000L)
+                            val minutes = (remainingTime / 1000) / 60
+                            val seconds = (remainingTime / 1000) % 60
+                            val timerRunning = timerInfo?.isRunning == true
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = modifier
+                                    .fillMaxWidth()
+                            ) {
+                                Column(
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Text(
+                                        text = String.format("%d:%02d", minutes, seconds),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        //fontWeight = FontWeight.Bold,
+                                        color = Color.Cyan,
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+
+                                    )
+                                    Text(
+                                        text = when (timerInfo?.state) {
+                                            TimerState.RUNNING -> "Timer Running..."
+                                            TimerState.PAUSED -> "Paused"
+                                            TimerState.STOPPED -> "Stopped"
+                                            else -> "Idle"
+                                        },
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+
+                                    )
+                                    Row {
+                                        Button(
+                                            onClick = {
+                                                if (timerRunning) {
+                                                    onTimerPause()
+                                                } else {
+                                                    onTimerStart()
+                                                }
+                                            }
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                if (timerRunning) {
+                                                    Icon(
+                                                        imageVector = Icons.Filled.Pause,
+                                                        contentDescription = "Pause"
+                                                    )
+                                                    Spacer(Modifier.width(4.dp))
+                                                    Text("Pause")
+                                                }else{
+                                                    Icon(
+                                                        imageVector = Icons.Filled.PlayArrow,
+                                                        contentDescription = "Pause"
+                                                    )
+                                                    Spacer(Modifier.width(4.dp))
+                                                    Text("Start")
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Button(
+                                                onClick = {
+                                                    onTimerStop()
+                                                }
+                                            ) {
+                                                Row (
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
+                                                ){
+
+                                                    Icon(
+                                                        imageVector = Icons.Filled.Stop,
+                                                        contentDescription = "Stop  Timer"
+                                                    )
+                                                   Spacer(Modifier.width(4.dp))
+                                                    Text("Stop")
+                                                }
+
+                                            }
+                                        }
+                                    }
+
+                                }
+
+                            }
+                        } else {
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = modifier
+                                    .fillMaxWidth()
+                                //.padding(top = 10.dp)
+                            ) {
+
+                                IconButton(
+                                    onClick = onDecrement
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Remove,
+                                        contentDescription = "Minus Sign"
+                                    )
+                                }
+
+                                Text(
+                                    text = "${(challengeName.currentProgress).toInt()}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+
+                                )
+
+                                IconButton(
+                                    onClick = onIncrement
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Add,
+                                        contentDescription = "ADD Button",
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = modifier
+                                .fillMaxWidth()
+
+                        ) {
+                            Text(
+                                text = "Task is paused",
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
-    }
-}
 
         @Composable
         fun StreakCards(
             @DrawableRes IconsImage: Int,
-            days:Int,
-            descriptions:String,
+            days: Int,
+            descriptions: String,
             modifier: Modifier = Modifier
-        ){
+        ) {
 
-            Card (
+            Card(
                 shape = RoundedCornerShape(15.dp),
                 modifier = modifier
                     .size(width = 100.dp, height = 150.dp)
@@ -399,7 +518,7 @@ fun HabitsListCard(
 //                        shape = RoundedCornerShape(15.dp),
 //                    )
 
-            ){
+            ) {
                 Column(
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -408,10 +527,10 @@ fun HabitsListCard(
                         .background(color = amoledBlack)
 
                 ) {
-                    Box (
+                    Box(
                         modifier = modifier
                             .size(25.dp)
-                    ){
+                    ) {
                         Image(
                             painter = painterResource(IconsImage),
                             contentDescription = "Card Icons"
@@ -434,9 +553,9 @@ fun HabitsListCard(
 
         @Composable
         fun AddNewHabitButton(
-            onClick: ()  -> Unit,
+            onClick: () -> Unit,
             modifier: Modifier = Modifier
-        ){
+        ) {
             Box(
                 modifier = modifier
                     .fillMaxWidth()
@@ -468,7 +587,7 @@ fun HabitsListCard(
 
         @OptIn(ExperimentalMaterial3Api::class)
         @Composable
-        fun TopBar(modifier: Modifier = Modifier){
+        fun TopBar(modifier: Modifier = Modifier) {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
@@ -486,34 +605,44 @@ fun HabitsListCard(
 
 
 
-@Preview(showBackground = true)
-@Composable
-fun HabitsListCardPreview() {
-    val fakeHabit = Habit(
-        id = 1,
-        habitName = "Read Books",
-        totalTarget = 30F,
-        numberDone = 15F,
-        isPaused = false,
-        totalStreakDays = 5,
-        isTimeBased = false,
-        unitTypeData = UnitType.REPS,
-    )
+        @Preview(showBackground = true)
+        @Composable
+        fun HabitsListCardPreview() {
+            val fakeHabit = Habit(
+                id = 1,
+                habitName = "Read Books",
+                totalTarget = 30L,
+                currentProgress = 15L,
+                isPaused = false,
+                totalStreakDays = 5,
+                isTimeBased = true,
+                unitTypeData = UnitType.REPS,
+            )
+            val mockTimerMap =
+                TimerInfo(remainingTime = 14L * 60_000L + 30_000L,
+                    isRunning = true,
+                    state = TimerState.RUNNING)
 
 
-    HabitsListCard(
-        challengeName = fakeHabit,
-        isPaused = fakeHabit.isPaused,
-        streakDays = fakeHabit.totalStreakDays,
-        onPausedOrResume = {},
-        onDelete = {},
-        completePercentage = (fakeHabit.numberDone * 100) / fakeHabit.totalTarget,
-        modifier = Modifier.padding(16.dp),
-        onDecrement = {},
-        onIncrement = {},
-        showProgressControls = true,
-        sliderPosition =0.5f,
-        onSliderChange = {},
-        unitTypeData = UnitType.REPS
-    )
-}
+
+            HabitsListCard(
+                challengeName = fakeHabit,
+                isPaused = fakeHabit.isPaused,
+                streakDays = fakeHabit.totalStreakDays,
+                onHabitPausedOrResume = {},
+                onDelete = {},
+                completePercentage = (fakeHabit.currentProgress * 100) / fakeHabit.totalTarget,
+                modifier = Modifier.padding(16.dp),
+                onDecrement = {},
+                onIncrement = {},
+                showProgressControls = true,
+                sliderPosition = 0.5f,
+                onSliderChange = {},
+                unitTypeData = fakeHabit.unitTypeData,
+                isTimeBased = fakeHabit.isTimeBased,
+                onTimerStart = {},
+                onTimerPause = {},
+                onTimerStop = {},
+                timerInfo = mockTimerMap,
+            )
+        }

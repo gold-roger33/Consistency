@@ -11,9 +11,9 @@ data class Habit(
     val id: Int = 0,
     val habitName: String,
     
-    val totalTarget:Float, //  Could be in minutes or counts
+    val totalTarget:Long, //  Could be in minutes or counts
 
-    val numberDone: Float = 0F,  //no of task completed today by the user
+    val currentProgress: Long = 0L,  //progress of a habit
 
     val isTimeBased: Boolean = false, // True = time-based, False = count-based
 

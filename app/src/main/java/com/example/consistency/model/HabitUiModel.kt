@@ -1,31 +1,33 @@
 package com.example.consistency.model
 
 import com.example.consistency.data.entity.Habit
-import com.example.consistency.model.UnitType
 
 data class HabitUiModel(
     val id: Int = 0,
     val name: String,
-    val target: Float,
-    val done: Float = 0F,
+    val target: Long,
+    val progress: Long = 0L,
     val isTimeBased:Boolean = false,
-    val isPaused: Boolean = false,
-    val totalStreakDays: Int = 0 ,
-    val isCompleted: Boolean = done >= target,
-    val progressPercentage: Float = done / target,
+    val isPaused: Boolean = true,
+    val totalStreakDays: Int = 0,
+    val isCompleted: Boolean = progress >= target,
+    val progressPercentage: Long = if (target > 0) (progress * 100 / target) else 0L,
     val unitTypeData: UnitType
-)
+){
+    val remaining: Long
+        get() = (target - progress).coerceAtLeast(0L) // avoid negatives
+}
 
 fun Habit.toUiModel(): HabitUiModel {
 return HabitUiModel(
     id = id,
     name = habitName,
     target = totalTarget,
-    done = numberDone,
+    progress = currentProgress,
     isPaused = isPaused,
     totalStreakDays = totalStreakDays,
-    isCompleted = numberDone >= totalTarget,
-    progressPercentage = numberDone / totalTarget,
+    isCompleted = currentProgress >= totalTarget,
+    progressPercentage = currentProgress / totalTarget,
     isTimeBased = isTimeBased,
     unitTypeData = unitTypeData
 )
@@ -36,7 +38,7 @@ fun HabitUiModel.toEntity() : Habit{
         id = id,
         habitName = name,
         totalTarget = target,
-        numberDone = done,
+        currentProgress = progress,
         isPaused = isPaused,
         totalStreakDays = totalStreakDays,
         isTimeBased = isTimeBased,

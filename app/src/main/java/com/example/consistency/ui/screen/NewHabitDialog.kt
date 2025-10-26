@@ -49,10 +49,10 @@ import com.example.consistency.model.UnitType
 fun NewHabitDialogContent(
     modifier: Modifier = Modifier,
     onCancel: () -> Unit,
-    onCreate: (String, Float, String, Boolean, UnitType) -> Unit
+    onCreate: (String, Long, String, Boolean, UnitType) -> Unit
 ) {
     var description by remember { mutableStateOf("") }
-    var target by remember {  mutableStateOf<Float?>(null) }
+    var target by remember {  mutableStateOf<Long?>(null) }
     var type by remember { mutableStateOf(Type.COUNT) }
     var selectedUnit by remember { mutableStateOf<UnitType?>(null) }
 
@@ -170,7 +170,7 @@ fun NewHabitDialogContent(
                             value = target?.toString() ?: "",
                             onValueChange = { input ->
 
-                                target = input.toFloatOrNull() ?: if (input.isEmpty()) null else 1F
+                                target = input.toLongOrNull() ?: if (input.isEmpty()) null else 0L
                             },
                             placeholder = {
                                 Text("1")
@@ -239,12 +239,12 @@ fun NewHabitDialogContent(
                         val isTimeBased = unit == UnitType.MINUTES || unit == UnitType.HOURS
 
                         val finalTarget = if (isTimeBased) {
-                            (selectedHour * 60 + selectedMinute).toFloat()
+                            (selectedHour * 60 + selectedMinute).toLong()
                         } else {
                             target
                         }
 
-                        if (description.isBlank() || finalTarget == null || finalTarget.isNaN() || finalTarget <= 0f) {
+                        if (description.isBlank() || finalTarget == null || finalTarget == 0L || finalTarget <= 0f ) { //check here fo 0Float
                         Toast.makeText(context, "Enter a valid Description or Target", Toast.LENGTH_SHORT).show()
                     } else {
                         onCreate(description, finalTarget, unit.label, isTimeBased, unit)
@@ -268,7 +268,7 @@ fun NewHabitDialogContent(
 fun NewHabitDialog(
     modifier: Modifier = Modifier,
     onDismiss : () -> Unit,
-    onCreate: (String, Float, String, Boolean, UnitType) -> Unit
+    onCreate: (String, Long, String, Boolean, UnitType) -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
         NewHabitDialogContent(
