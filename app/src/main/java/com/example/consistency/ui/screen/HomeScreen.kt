@@ -220,7 +220,21 @@ fun  HomeScreen(
                         "totalTarget=${challengeName.totalTarget}"
             )
 
-            Card(
+            val totalTarget = challengeName.totalTarget
+
+            val (progressFraction, displayProgress) = if (isTimeBased) {
+                val totalTime = totalTarget * 60_000L
+                val remainingTime = timerInfo?.remainingTime ?: totalTime
+                val elapsed = totalTime - remainingTime
+                val fraction = (elapsed.toFloat() / totalTime).coerceIn(0f, 1f)
+                val currentProgress = (elapsed / 60_000L).toInt()
+                fraction to "$currentProgress/${totalTarget.toInt()} min"
+            } else {
+                val fraction = sliderPosition.coerceIn(0f, 1f)
+                fraction to "${challengeName.currentProgress.toInt()}/${totalTarget.toInt()} ${challengeName.unitTypeData.label}"
+            }
+
+                Card(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
@@ -286,7 +300,7 @@ fun  HomeScreen(
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Text(
-                            text = "${(challengeName.currentProgress).toInt()}/${(challengeName.totalTarget).toInt()}  ${unitTypeData.label}"
+                            text = displayProgress,
                             // need to change for time-based and it is directly calling from habit data class
                         )
 
@@ -328,8 +342,11 @@ fun  HomeScreen(
                             )
 
                             Slider(
-                                value = sliderPosition,
-                                onValueChange = { onSliderChange(it) },
+                                value = progressFraction,
+                                onValueChange = {
+                                    if (!isTimeBased) onSliderChange(it)
+                                                },
+                                enabled = !isTimeBased,
                                 colors = SliderDefaults.colors(
                                     thumbColor = Color.Transparent,
                                     activeTrackColor = Color.Transparent,
@@ -340,7 +357,7 @@ fun  HomeScreen(
                         }
 
                         Text(
-                            text = "${(sliderPosition * 100).toInt()}% Completed",
+                            text = "${(progressFraction * 100).toInt()}% Completed",
                             textAlign = TextAlign.Start,
                             modifier = Modifier.fillMaxWidth(),
                             style = MaterialTheme.typography.bodyMedium
@@ -361,7 +378,7 @@ fun  HomeScreen(
                                     .fillMaxWidth()
                             ) {
                                 Column(
-                                    verticalArrangement = Arrangement.Center,
+                                    verticalArrangement = Arrangement.spacedBy(2.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     Text(
@@ -372,6 +389,9 @@ fun  HomeScreen(
                                         modifier = Modifier.padding(horizontal = 16.dp)
 
                                     )
+
+                                   Spacer(modifier = Modifier.height(4.dp))
+
                                     Text(
                                         text = when (timerInfo?.state) {
                                             TimerState.RUNNING -> "Timer Running..."
@@ -383,7 +403,13 @@ fun  HomeScreen(
                                         modifier = Modifier.padding(horizontal = 16.dp)
 
                                     )
-                                    Row {
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Row (
+                                        modifier = Modifier
+                                            .padding(bottom = 4.dp)
+                                    ){
                                         Button(
                                             onClick = {
                                                 if (timerRunning) {
