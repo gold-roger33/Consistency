@@ -2,7 +2,7 @@ package com.example.consistency.data.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.consistency.model.HabitType
+import com.example.consistency.model.UnitType
 
 @Entity(tableName = "habit")
 data class Habit(
@@ -10,12 +10,17 @@ data class Habit(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val habitName: String,
-    val totalTarget:Int, // total no for the current task
+    
+    val totalTarget:Long, //  Could be in minutes or counts
 
-    val numberDone: Int = 0,  //no of task completed today by the user
+    val currentProgress: Long = 0L,  //progress of a habit
+
+    val isTimeBased: Boolean = false, // True = time-based, False = count-based
 
     val isPaused: Boolean = false, //task pause or not
 
     val totalStreakDays : Int = 0,
 
+    val unitTypeData: UnitType //which str type is the habit
+                          // eg:"minute","Rep"
 )

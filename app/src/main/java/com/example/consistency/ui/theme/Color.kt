@@ -1,4 +1,5 @@
 package com.example.compose
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF2F3130)
@@ -218,8 +219,32 @@ val surfaceContainerHighDarkHighContrast = Color(0xFF3B3B3B)
 val surfaceContainerHighestDarkHighContrast = Color(0xFF474747)
 
 val amoledBlack = Color(0xFF000000)
+val greensih = Color(0xFF50C878)
+val neonGreen = Color(0xFF00FF88)
 
+val addButtonGradColour = Brush.horizontalGradient(
+            colors = listOf(
+            Color(0x3300D4FF), // #00D4FF with 20% opacity
+            Color(0x338B5CF6)  // #8B5CF6 with 20% opacity
+            )
+)
 
+val sliderColour = Brush.horizontalGradient(
+    colors = listOf(
+        Color(0xFF00D4FF), // Neon Blue
+        Color(0xFF8B5CF6)  // Neon Purple
+    )
+)
+
+val activeCardColour = Brush.horizontalGradient(
+    colors = listOf(
+
+        Color(0xFF00FF88),
+        Color(0xFF000000),
+    ),
+    startX = 0.0f,
+    endX = 1f
+)
 
 
 

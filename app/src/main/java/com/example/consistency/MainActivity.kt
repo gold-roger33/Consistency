@@ -22,7 +22,7 @@ private const val TAG = "MainActivity"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.wtf(TAG, "TEST WTF LOG")
+        Log.d(TAG, "Running Main")
         enableEdgeToEdge()
         setContent {
             AppTheme  {

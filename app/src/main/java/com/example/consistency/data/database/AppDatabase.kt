@@ -18,9 +18,9 @@ abstract  class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context) : AppDatabase{
             return  Instance?: synchronized(this){
-            Room.databaseBuilder(context,
-                AppDatabase::class.java,name = "habit_database")
-                .fallbackToDestructiveMigration()
+                Room.databaseBuilder(context,
+                    AppDatabase::class.java,name = "habit_database")
+                    .fallbackToDestructiveMigration(true)
                 .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
                 .build()
                 .also { Instance = it }
