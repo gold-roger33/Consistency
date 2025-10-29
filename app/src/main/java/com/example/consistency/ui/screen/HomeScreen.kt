@@ -336,7 +336,7 @@ fun  HomeScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth(fraction = sliderPosition)
+                                    .fillMaxWidth(fraction = progressFraction)
                                     .height(15.dp)
                                     .background(sliderColour, shape = RoundedCornerShape(50))
                             )
@@ -346,7 +346,7 @@ fun  HomeScreen(
                                 onValueChange = {
                                     if (!isTimeBased) onSliderChange(it)
                                                 },
-                                enabled = !isTimeBased,
+                                thumb = { },
                                 colors = SliderDefaults.colors(
                                     thumbColor = Color.Transparent,
                                     activeTrackColor = Color.Transparent,
